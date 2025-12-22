@@ -9,11 +9,14 @@ const mockAnalysis: RentalAnalysis = {
   property: {
     id: 'prop-123',
     address: 'Av. Providencia 1234, Las Condes',
+    value_clp: 95000000,
     value_uf: 2500,
     market_rent_clp: 850000,
     size_m2: 85,
     bedrooms: 2,
-    bathrooms: 2
+    bathrooms: 2,
+    parking_spaces: 1,
+    storage_units: 1
   },
   plans: [
     {
