@@ -235,7 +235,12 @@ export default function ClientReviewPage() {
               <div className="space-y-3">
                 <div>
                   <span className="text-gray-600">Valor de la propiedad:</span>
-                  <span className="ml-2 font-medium">{analysis.property.value_uf.toLocaleString()} UF</span>
+                  <span className="ml-2 font-medium">
+                    {analysis.property.value_uf 
+                      ? `${analysis.property.value_uf.toLocaleString()} UF` 
+                      : formatCurrency(analysis.property.value_clp)
+                    }
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-600">CAP Rate estimado:</span>
