@@ -88,19 +88,7 @@ export default function PropitalSync({
   }
 
   if (!isEnabled) {
-    return (
-      <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-2xl">⚠️</span>
-          <div>
-            <h3 className="font-bold text-yellow-800">Integración con Propital Deshabilitada</h3>
-            <p className="text-sm text-yellow-700 mt-1">
-              Para usar esta funcionalidad, configure las variables de entorno necesarias y habilite la integración.
-            </p>
-          </div>
-        </div>
-      </div>
-    )
+    return null
   }
 
   if (loading) {
