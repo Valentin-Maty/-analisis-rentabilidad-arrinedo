@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
       bedrooms: searchParams.get('bedrooms') ? parseInt(searchParams.get('bedrooms')!) : undefined,
       bathrooms: searchParams.get('bathrooms') ? parseInt(searchParams.get('bathrooms')!) : undefined,
       tags: searchParams.get('tags')?.split(',') || undefined,
-      sortBy: sortBy || 'updated_at',
-      sortOrder: sortOrder || 'desc',
+      sortBy: (sortBy as AnalysisFilters['sortBy']) || 'updated_at',
+      sortOrder: (sortOrder as AnalysisFilters['sortOrder']) || 'desc',
     };
 
     // Obtener todos los análisis del store
