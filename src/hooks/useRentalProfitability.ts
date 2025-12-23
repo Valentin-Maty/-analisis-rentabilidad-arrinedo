@@ -329,7 +329,7 @@ export const useRentalProfitability = ({
       id: 'temp-property',
       address: formValues.property_address,
       value_clp: parseFloat(formValues.property_value_clp) || 0,
-      value_uf: parseFloat(formValues.property_value_uf) || 0,
+      value_uf: formValues.property_value_uf ? parseFloat(formValues.property_value_uf) : 0,
       market_rent_clp: marketRentCLP,
       size_m2: parseFloat(formValues.property_size_m2) || undefined,
       bedrooms: parseInt(formValues.bedrooms) || undefined,
