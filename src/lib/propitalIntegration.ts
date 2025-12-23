@@ -325,5 +325,5 @@ export function validatePropitalConnection(): boolean {
 }
 
 export function isPropitalIntegrationEnabled(): boolean {
-  return validatePropitalConnection() && process.env.NEXT_PUBLIC_ENABLE_PROPITAL_INTEGRATION === 'true'
+  return process.env.NEXT_PUBLIC_ENABLE_PROPITAL_INTEGRATION === 'true'
 }

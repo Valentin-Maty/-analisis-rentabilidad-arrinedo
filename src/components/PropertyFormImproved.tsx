@@ -6,7 +6,7 @@ import type { RentalAnalysisForm } from '@/types/rental'
 import { SavedAnalysisFormData, formDataToSavedAnalysis } from '@/types/saved-analysis'
 import { useRouter } from 'next/navigation'
 import PropitalSync from './PropitalSync'
-import { transformToFormData, type PropitalProperty } from '@/lib/propitalIntegration'
+import { transformToFormData, type PropitalProperty, isPropitalIntegrationEnabled } from '@/lib/propitalIntegration'
 import { toast } from '@/components/ui/Toast'
 // import { useConfirm } from '@/components/ui/Modal' // Comentado para evitar conflicto con confirm global
 import HelpButton from '@/components/ui/HelpButton'
@@ -261,10 +261,12 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
               </div>
 
               {/* Integración con Propital */}
-              <PropitalSync 
-                onPropertySelect={handlePropitalPropertySelect}
-                brokerId="broker-default"
-              />
+              {isPropitalIntegrationEnabled() && (
+                <PropitalSync 
+                  onPropertySelect={handlePropitalPropertySelect}
+                  brokerId="broker-default"
+                />
+              )}
 
               <div className="space-y-4">
                 <div>
