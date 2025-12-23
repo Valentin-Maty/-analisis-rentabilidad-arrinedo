@@ -317,10 +317,10 @@ export function handleValidationError(
   field?: string,
   component?: string
 ): void {
-  handleError(message, ErrorType.VALIDATION, ErrorSeverity.MEDIUM, message, {
+  const fullMessage = field ? `${message} (Campo: ${field})` : message
+  handleError(fullMessage, ErrorType.VALIDATION, ErrorSeverity.MEDIUM, message, {
     component,
-    action: 'VALIDATION',
-    details: { field }
+    action: 'VALIDATION'
   })
 }
 
