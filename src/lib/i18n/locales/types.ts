@@ -41,6 +41,7 @@ export interface LocaleStrings {
   property: Record<string, string>
   analysis: Record<string, string>
   rental: Record<string, string>
+  comparables: Record<string, string>
   plans: Record<string, string>
   errors: Record<string, string>
   messages: Record<string, string>
