@@ -133,6 +133,12 @@ export interface RentalAnalysisForm {
   suggested_rent_clp: string;
   suggested_rent_uf: string;
   rent_currency: 'CLP' | 'UF';
+  
+  // Precio de captación de la propiedad
+  capture_price_clp?: string;
+  capture_price_uf?: string;
+  capture_price_currency?: 'CLP' | 'UF';
+  
   market_study_notes: string;
   
   // Configuración de planes

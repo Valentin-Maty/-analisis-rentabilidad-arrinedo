@@ -32,6 +32,9 @@ export const DEFAULT_RENTAL_FORM_VALUES: RentalAnalysisForm = {
   suggested_rent_clp: '0',
   suggested_rent_uf: '0',
   rent_currency: 'CLP',
+  capture_price_clp: undefined,
+  capture_price_uf: undefined,
+  capture_price_currency: 'CLP',
   market_study_notes: '',
   plan_a_commission: '12', // 12% anual para plan premium
   plan_b_commission: '10', // 10% anual para plan estándar

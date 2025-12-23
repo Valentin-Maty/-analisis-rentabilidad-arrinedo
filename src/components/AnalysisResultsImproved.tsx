@@ -217,25 +217,25 @@ export default function AnalysisResultsImproved({
           </div>
           <div className="card-body">
             <div className="space-y-4">
-              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
-                <div className="text-4xl mb-3">🚨</div>
-                <div className="text-2xl font-bold text-red-700 mb-2">
-                  {vacancyImpact.percentage_annual_loss.toFixed(1)}%
+              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
+                <div className="text-4xl mb-3">🎯</div>
+                <div className="text-2xl font-bold text-green-700 mb-2">
+                  +{(100 - vacancyImpact.percentage_annual_loss).toFixed(1)}%
                 </div>
-                <div className="text-sm text-red-600 font-medium">
-                  Pérdida por cada mes vacante
+                <div className="text-sm text-green-600 font-medium">
+                  Rentabilidad conservada al arrendar en 30 días
                 </div>
-                <div className="text-xs text-red-500 mt-2">
-                  1 mes sin arriendo = {vacancyImpact.percentage_annual_loss.toFixed(1)}% menos rentabilidad anual
+                <div className="text-xs text-green-500 mt-2">
+                  Arriendo rápido = Mayor rentabilidad anual para el propietario
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 text-center">
-                  <div className="text-2xl font-bold text-orange-700">
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
+                  <div className="text-2xl font-bold text-blue-700">
                     {formatCurrency(vacancyImpact.lost_income_clp)}
                   </div>
-                  <div className="text-sm text-orange-600">Pérdida Mensual</div>
+                  <div className="text-sm text-blue-600">Ingreso Mensual Asegurado</div>
                 </div>
                 
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
@@ -394,16 +394,16 @@ export default function AnalysisResultsImproved({
               </div>
             </div>
 
-            <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-6">
-              <h5 className="font-bold text-orange-900 mb-4">⚠️ Información Importante sobre Vacancia</h5>
-              <div className="space-y-3 text-sm text-orange-800">
+            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+              <h5 className="font-bold text-green-900 mb-4">💰 Beneficios del Arriendo Rápido</h5>
+              <div className="space-y-3 text-sm text-green-800">
                 <div className="flex items-start space-x-2">
-                  <span className="text-orange-600 mt-0.5">•</span>
-                  <span>Cada mes de vacancia representa una pérdida del <strong>{vacancyImpact.percentage_annual_loss.toFixed(1)}%</strong> de la rentabilidad anual.</span>
+                  <span className="text-green-600 mt-0.5">•</span>
+                  <span>Arrendar en el primer mes conserva el <strong>{(100 - vacancyImpact.percentage_annual_loss).toFixed(1)}%</strong> de la rentabilidad anual proyectada.</span>
                 </div>
                 <div className="flex items-start space-x-2">
-                  <span className="text-orange-600 mt-0.5">•</span>
-                  <span>Es preferible reducir el precio hasta un <strong>{calculations.break_even_rent_reduction.toFixed(1)}%</strong> antes que mantener la propiedad vacante.</span>
+                  <span className="text-green-600 mt-0.5">•</span>
+                  <span>Los ajustes de precio estratégicos de hasta <strong>{calculations.break_even_rent_reduction.toFixed(1)}%</strong> maximizan el retorno anual total.</span>
                 </div>
                 <div className="flex items-start space-x-2">
                   <span className="text-orange-600 mt-0.5">•</span>

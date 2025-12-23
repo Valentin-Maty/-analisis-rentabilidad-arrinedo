@@ -592,6 +592,91 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                     💡 Este precio será la base para los planes A, B y C
                   </p>
                 </div>
+
+                {/* Precio de Captación de la Propiedad */}
+                <div className="bg-purple-50 rounded-lg p-4 space-y-3 mt-4">
+                  <h3 className="text-lg font-semibold text-purple-900">📋 Precio de Captación de la Propiedad</h3>
+                  
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setValue('capture_price_currency', 'CLP')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        formValues.capture_price_currency === 'CLP'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      💵 Pesos (CLP)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setValue('capture_price_currency', 'UF')}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        formValues.capture_price_currency === 'UF'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      💎 UF
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (formValues.rent_currency === 'CLP') {
+                          setValue('capture_price_clp', formValues.suggested_rent_clp)
+                          setValue('capture_price_currency', 'CLP')
+                        } else {
+                          setValue('capture_price_uf', formValues.suggested_rent_uf)
+                          setValue('capture_price_currency', 'UF')
+                        }
+                      }}
+                      className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-all"
+                    >
+                      🔄 Usar precio sugerido
+                    </button>
+                  </div>
+
+                  {/* Campo de precio de captación CLP */}
+                  {formValues.capture_price_currency === 'CLP' && (
+                    <div>
+                      <label className="label">💵 Precio de Captación en Pesos Chilenos (CLP)</label>
+                      <div className="relative">
+                        <input
+                          {...register('capture_price_clp')}
+                          type="number"
+                          className="input"
+                          placeholder="500000 (sin puntos)"
+                        />
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">CLP</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Campo de precio de captación UF */}
+                  {formValues.capture_price_currency === 'UF' && (
+                    <div>
+                      <label className="label">💎 Precio de Captación en Unidades de Fomento (UF)</label>
+                      <div className="relative">
+                        <input
+                          {...register('capture_price_uf')}
+                          type="number"
+                          step="0.01"
+                          className="input"
+                          placeholder="13.5 (ejemplo: 13 coma 5)"
+                        />
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">UF</span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        💱 Equivale aproximadamente a ${Math.round(parseFloat(formValues.capture_price_uf || '0') * parseFloat(formValues.uf_value_clp || '38000')).toLocaleString()} CLP
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-gray-600 mt-1">
+                    💡 Precio con el cual el propietario captó o espera captar la propiedad para arriendo
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-between pt-4">
@@ -711,7 +796,7 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         
                         const result = await response.json()
                         if (result.success) {
-                          alert('✅ Propuesta enviada exitosamente' + (result.slackNotified ? ' y notificada por Slack' : ''))
+                          alert('✅ Propuesta enviada exitosamente al cliente')
                         } else {
                           alert('❌ Error al enviar la propuesta')
                         }

@@ -389,7 +389,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                         <span>Ingreso promedio esperado:</span>
                         <span className="font-bold">${Math.round(baseRent * 0.975).toLocaleString('es-CL')}</span>
                       </div>
-                      <div className="text-xs text-green-600 mt-1">Basado en arriendo en día 12 (pérdida 0.4% rentabilidad anual)</div>
+                      <div className="text-xs text-green-600 mt-1">✅ Arriendo rápido en 12 días = 99.6% de rentabilidad anual conservada</div>
                     </div>
                     <div className="bg-white bg-opacity-60 p-3 rounded">
                       <div className="text-green-700 font-medium">✅ Ventajas:</div>
@@ -447,7 +447,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                         <span>Ingreso promedio esperado:</span>
                         <span className="font-bold">${Math.round(baseRent * 0.97).toLocaleString('es-CL')}</span>
                       </div>
-                      <div className="text-xs text-orange-600 mt-1">Basado en arriendo en día 15 (pérdida 0.5% rentabilidad anual)</div>
+                      <div className="text-xs text-orange-600 mt-1">🌟 Arriendo en 15 días = 99.5% de rentabilidad anual conservada</div>
                     </div>
                     <div className="bg-white bg-opacity-60 p-3 rounded">
                       <div className="text-orange-700 font-medium">⚡ Ventajas:</div>
@@ -505,7 +505,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                         <span>Ingreso promedio esperado:</span>
                         <span className="font-bold">${Math.round(baseRent * 0.985).toLocaleString('es-CL')}</span>
                       </div>
-                      <div className="text-xs text-blue-600 mt-1">Basado en arriendo en día 20 (pérdida 0.67% rentabilidad anual)</div>
+                      <div className="text-xs text-blue-600 mt-1">🔵 Arriendo en 20 días = 99.33% de rentabilidad anual conservada</div>
                     </div>
                     <div className="bg-white bg-opacity-60 p-3 rounded">
                       <div className="text-blue-700 font-medium">🎯 Ventajas:</div>
@@ -525,7 +525,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
         {/* Nota importante */}
         <div className="bg-green-50 border border-green-300 rounded-lg p-4">
           <p className="text-sm text-green-800">
-            <strong>📌 Lógica de Rentabilidad:</strong> Cada día sin arriendo representa una pérdida de 0.033% de la rentabilidad anual. 
+            <strong>📌 Lógica de Rentabilidad:</strong> Arriendo rápido = mayor rentabilidad. Cada día que se arrienda antes, conserva 0.033% adicional de rentabilidad anual. 
             El sistema maximiza la rentabilidad asegurando que nunca se pierda más del 8.33% (equivalente a 1 mes de los 12 del año). 
             Cada estrategia balancea velocidad vs precio óptimo según sus preferencias.
           </p>
@@ -767,7 +767,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
         <h4 className="font-bold text-blue-900 mb-2">📋 Flujo de Aceptación</h4>
         <div className="text-sm text-blue-800 space-y-1">
           <p><strong>1.</strong> 📧 Se envía PDF al cliente para firma</p>
-          <p><strong>2.</strong> 🔔 Notificación automática por Slack al equipo</p>
+          <p><strong>2.</strong> 🔔 Notificación automática al equipo comercial</p>
           <p><strong>3.</strong> ✍️ Cliente firma y acepta el plan comercial</p>
           <p><strong>4.</strong> 🚀 Se autoriza la publicación de la propiedad</p>
           <p><strong>5.</strong> ⏰ Comienzan a correr los 30 días del plan</p>
