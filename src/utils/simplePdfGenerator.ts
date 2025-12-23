@@ -55,11 +55,11 @@ export const generateSimpleRentalPDF = (options: SimplePDFOptions & { rentCurren
     
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(22)
-    doc.setFont(undefined, 'bold')
+    doc.setFont('helvetica', 'bold')
     doc.text('🏠 ANÁLISIS DE RENTABILIDAD', pageWidth / 2, 20, { align: 'center' })
     
     doc.setFontSize(14)
-    doc.setFont(undefined, 'normal')
+    doc.setFont('helvetica', 'normal')
     doc.text('Planes Comerciales de Arriendo en Exclusiva', pageWidth / 2, 32, { align: 'center' })
     
     yPosition = 60
