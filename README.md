@@ -223,4 +223,4 @@ Editar clases en `/src/app/globals.css` o componentes individuales
 
 **Sistema desarrollado para TuMatch - Análisis de Rentabilidad para Arriendos**
 
-*Basado en el sistema existente de análisis de ventas, adaptado específicamente para el mercado de arriendos con funcionalidades avanzadas de planificación comercial y seguimiento automatizado.*
+*Basado en el sistema existente de análisis de ventas, adaptado específicamente para el mercado de arriendos con funcionalidades avanzadas de planificación comercial y seguimiento automatizado.*# Trigger Vercel deploy - ma., 23 de dic. de 2025 12:36:27
