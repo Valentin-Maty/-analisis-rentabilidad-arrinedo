@@ -149,28 +149,42 @@ export const useRentalProfitability = ({
 
   // Función para calcular CAP rate para arriendos
   const calculateCapRate = useMemo((): CapRateAnalysis => {
-    // Usar valor en pesos como principal
-    const propertyValueCLP = parseFloat(formValues.property_value_clp) || 0
-    const ufValueCLP = parseFloat(formValues.uf_value_clp) || 38000
+    const ufValueCLP = parseFloat(formValues.uf_value_clp) || 37000
+    
+    // Validar que el valor UF esté en un rango razonable (25,000 - 50,000 CLP)
+    const validUfValue = ufValueCLP >= 25000 && ufValueCLP <= 50000 ? ufValueCLP : 37000
+    
+    // Calcular valor de la propiedad en CLP considerando si está en UF o CLP
+    let propertyValueCLP = 0
+    if (formValues.property_value_clp && parseFloat(formValues.property_value_clp) > 0) {
+      propertyValueCLP = Math.abs(parseFloat(formValues.property_value_clp)) // Asegurar valor positivo
+    } else if (formValues.property_value_uf && parseFloat(formValues.property_value_uf) > 0) {
+      propertyValueCLP = Math.abs(parseFloat(formValues.property_value_uf)) * validUfValue
+    }
     
     // Calcular precio en CLP considerando la moneda seleccionada
     let suggestedRentCLP = 0
     if (formValues.rent_currency === 'UF') {
-      const rentUF = parseFloat(formValues.suggested_rent_uf) || 0
-      suggestedRentCLP = rentUF * ufValueCLP
+      const rentUF = Math.abs(parseFloat(formValues.suggested_rent_uf) || 0) // Asegurar valor positivo
+      suggestedRentCLP = rentUF * validUfValue
     } else {
-      suggestedRentCLP = parseFloat(formValues.suggested_rent_clp) || 0
+      suggestedRentCLP = Math.abs(parseFloat(formValues.suggested_rent_clp) || 0) // Asegurar valor positivo
     }
     
     const annualRentalIncome = suggestedRentCLP * 12
     
-    const maintenance = parseFloat(formValues.annual_maintenance_clp) || 0
-    const propertyTax = parseFloat(formValues.annual_property_tax_clp) || 0
-    const insurance = parseFloat(formValues.annual_insurance_clp) || 0
+    // Validar gastos anuales para evitar valores negativos o excesivos
+    const maintenance = Math.abs(parseFloat(formValues.annual_maintenance_clp) || 0)
+    const propertyTax = Math.abs(parseFloat(formValues.annual_property_tax_clp) || 0) 
+    const insurance = Math.abs(parseFloat(formValues.annual_insurance_clp) || 0)
     const annualExpenses = maintenance + propertyTax + insurance
     
-    const netOperatingIncome = annualRentalIncome - annualExpenses
-    const capRate = propertyValueCLP > 0 ? (netOperatingIncome / propertyValueCLP) * 100 : 0
+    // Validar que los gastos no sean excesivos (máximo 50% del ingreso anual)
+    const maxReasonableExpenses = annualRentalIncome * 0.5
+    const validatedExpenses = annualExpenses > maxReasonableExpenses ? maxReasonableExpenses : annualExpenses
+    
+    const netOperatingIncome = Math.max(0, annualRentalIncome - validatedExpenses) // No permitir ingresos netos negativos
+    const capRate = propertyValueCLP > 0 ? Math.max(0, (netOperatingIncome / propertyValueCLP) * 100) : 0
     
     // Determinar comparación con el mercado (simplificado)
     let comparison: 'above' | 'average' | 'below' = 'average'
@@ -180,36 +194,53 @@ export const useRentalProfitability = ({
     return {
       property_value_clp: propertyValueCLP,
       annual_rental_income: annualRentalIncome,
-      annual_expenses: annualExpenses,
+      annual_expenses: validatedExpenses,
       net_operating_income: netOperatingIncome,
-      cap_rate_percentage: capRate,
+      cap_rate_percentage: Math.round(capRate * 100) / 100, // Redondear a 2 decimales
       comparison_to_market: comparison
     }
   }, [formValues])
 
   // Función para calcular impacto de vacancia
   const calculateVacancyImpact = useMemo((): VacancyImpact => {
+    const ufValueCLP = parseFloat(formValues.uf_value_clp) || 37000
+    const validUfValue = ufValueCLP >= 25000 && ufValueCLP <= 50000 ? ufValueCLP : 37000
+    
     // Calcular precio en CLP considerando la moneda seleccionada
     let monthlyRentCLP = 0
     if (formValues.rent_currency === 'UF') {
-      const rentUF = parseFloat(formValues.suggested_rent_uf) || 0
-      const ufValueCLP = parseFloat(formValues.uf_value_clp) || 38000
-      monthlyRentCLP = rentUF * ufValueCLP
+      const rentUF = Math.abs(parseFloat(formValues.suggested_rent_uf) || 0)
+      monthlyRentCLP = rentUF * validUfValue
     } else {
-      monthlyRentCLP = parseFloat(formValues.suggested_rent_clp) || 0
+      monthlyRentCLP = Math.abs(parseFloat(formValues.suggested_rent_clp) || 0)
     }
     
-    // Cada mes vacante representa 8.33% de pérdida anual (12 meses)
+    // Validar que tengamos valores válidos para evitar NaN y valores irónicos
+    if (!monthlyRentCLP || monthlyRentCLP <= 0 || isNaN(monthlyRentCLP) || monthlyRentCLP < 50000) {
+      return {
+        days_vacant: 30,
+        percentage_annual_loss: 8.33,
+        lost_income_clp: 0,
+        break_even_reduction_percentage: 0
+      }
+    }
+    
+    // Validar que el arriendo no sea excesivamente alto (máximo 10M mensual)
+    const validatedMonthlyRent = monthlyRentCLP > 10000000 ? 10000000 : monthlyRentCLP
+    
+    // Cada mes vacante representa 8.33% de pérdida anual (1/12 = 8.33%)
     const vacancyImpactPerMonth = 8.33
     
-    // Calculamos cuánto se puede reducir el precio para evitar 1 mes de vacancia
-    const oneMonthLoss = monthlyRentCLP
-    const maxReductionToBreakEven = (oneMonthLoss / (monthlyRentCLP * 11)) * 100 // % que se puede reducir por 11 meses para igualar 1 mes perdido
+    // Cálculo lógico: cuánto se puede reducir el precio para compensar 1 mes de vacancia
+    // Si arrienda 1 mes antes con reducción X%, debe compensar 1 mes perdido
+    // Fórmula: 11 meses con (100%-X%) = 12 meses con 100%
+    // 11 * (1 - X/100) = 12 * 1  ->  X = (1/11) * 100 = 9.09%
+    const maxReductionToBreakEven = Math.round((1/11) * 100 * 100) / 100 // 9.09% exacto
 
     return {
-      days_vacant: 30, // Ejemplo: 1 mes
-      percentage_annual_loss: vacancyImpactPerMonth,
-      lost_income_clp: monthlyRentCLP,
+      days_vacant: 30, // 1 mes de vacancia típica
+      percentage_annual_loss: Math.round(vacancyImpactPerMonth * 100) / 100,
+      lost_income_clp: Math.round(validatedMonthlyRent),
       break_even_reduction_percentage: maxReductionToBreakEven
     }
   }, [formValues.suggested_rent_clp, formValues.suggested_rent_uf, formValues.rent_currency, formValues.uf_value_clp])
@@ -242,11 +273,25 @@ export const useRentalProfitability = ({
     // Calcular precio base en CLP considerando la moneda seleccionada
     let baseRentCLP = 0
     if (formValues.rent_currency === 'UF') {
-      const rentUF = parseFloat(formValues.suggested_rent_uf) || 0
+      const rentUF = Math.abs(parseFloat(formValues.suggested_rent_uf) || 0)
       const ufValueCLP = parseFloat(formValues.uf_value_clp) || 38000
-      baseRentCLP = rentUF * ufValueCLP
+      const validUfValue = ufValueCLP >= 25000 && ufValueCLP <= 50000 ? ufValueCLP : 38000
+      baseRentCLP = rentUF * validUfValue
     } else {
-      baseRentCLP = parseFloat(formValues.suggested_rent_clp) || 0
+      baseRentCLP = Math.abs(parseFloat(formValues.suggested_rent_clp) || 0)
+    }
+    
+    // Validar que el precio base sea razonable
+    if (baseRentCLP < 50000 || baseRentCLP > 10000000) {
+      // Si el precio no es razonable, retornar comparaciones vacías
+      return generateRentalPlans.map(plan => ({
+        plan_id: plan.id,
+        expected_rental_time: 30,
+        total_commission: 0,
+        net_annual_income: 0,
+        vacancy_risk_score: 5,
+        recommendation_score: 5
+      }))
     }
     
     return generateRentalPlans.map(plan => {
@@ -282,7 +327,7 @@ export const useRentalProfitability = ({
       const totalCommission = annualRentWithVacancy * (plan.commission_percentage / 100)
       
       // Ingreso neto anual (después de comisión y considerando vacancia)
-      const netAnnualIncome = annualRentWithVacancy - totalCommission
+      const netAnnualIncome = Math.max(0, annualRentWithVacancy - totalCommission)
       
       // Score de riesgo de vacancia (Plan A menor riesgo, Plan C mayor riesgo)
       const vacancyRiskScore = plan.id === 'A' ? 2 : plan.id === 'B' ? 5 : 8
@@ -293,8 +338,8 @@ export const useRentalProfitability = ({
       return {
         plan_id: plan.id,
         expected_rental_time: expectedRentalTime,
-        total_commission: totalCommission,
-        net_annual_income: netAnnualIncome,
+        total_commission: Math.round(totalCommission),
+        net_annual_income: Math.round(netAnnualIncome),
         vacancy_risk_score: vacancyRiskScore,
         recommendation_score: recommendationScore
       }
@@ -306,12 +351,33 @@ export const useRentalProfitability = ({
     const capRateAnalysis = calculateCapRate
     const vacancyImpact = calculateVacancyImpact
     
+    // Validar y sanitizar valores para evitar NaN y valores confusos para "Doña Juanita"
+    const capRate = !isNaN(capRateAnalysis.cap_rate_percentage) && capRateAnalysis.cap_rate_percentage >= 0 
+      ? Math.min(capRateAnalysis.cap_rate_percentage, 50) // Máximo 50% para evitar valores irreales
+      : 0
+    
+    const annualYield = capRateAnalysis.property_value_clp > 0 && !isNaN(capRateAnalysis.annual_rental_income) 
+      ? Math.min((capRateAnalysis.annual_rental_income / capRateAnalysis.property_value_clp) * 100, 50)
+      : 0
+    
+    const monthlyNet = !isNaN(capRateAnalysis.net_operating_income) && capRateAnalysis.net_operating_income >= 0
+      ? Math.round(capRateAnalysis.net_operating_income / 12)
+      : 0
+    
+    const vacancyCost = !isNaN(vacancyImpact.lost_income_clp) && vacancyImpact.lost_income_clp >= 0
+      ? Math.round(vacancyImpact.lost_income_clp)
+      : 0
+    
+    const breakEvenReduction = !isNaN(vacancyImpact.break_even_reduction_percentage) && vacancyImpact.break_even_reduction_percentage >= 0
+      ? Math.min(vacancyImpact.break_even_reduction_percentage, 25) // Máximo 25% para ser conservador
+      : 0
+    
     return {
-      cap_rate: capRateAnalysis.cap_rate_percentage,
-      annual_rental_yield: (capRateAnalysis.annual_rental_income / capRateAnalysis.property_value_clp) * 100,
-      monthly_net_income: capRateAnalysis.net_operating_income / 12,
-      vacancy_cost_per_month: vacancyImpact.lost_income_clp,
-      break_even_rent_reduction: vacancyImpact.break_even_reduction_percentage,
+      cap_rate: capRate,
+      annual_rental_yield: annualYield,
+      monthly_net_income: monthlyNet,
+      vacancy_cost_per_month: vacancyCost,
+      break_even_rent_reduction: breakEvenReduction,
       plan_comparisons: comparePlans
     }
   }, [calculateCapRate, calculateVacancyImpact, comparePlans])

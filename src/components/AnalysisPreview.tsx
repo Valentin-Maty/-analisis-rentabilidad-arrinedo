@@ -15,10 +15,6 @@ interface ClientData {
   ownerPhone: string
   ownerEmail: string
   selectedStrategies: string[]
-  brokerName: string
-  brokerRut: string
-  brokerPhone: string
-  brokerEmail: string
 }
 
 export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
@@ -31,11 +27,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
     ownerRut: '',
     ownerPhone: '',
     ownerEmail: '',
-    selectedStrategies: [],
-    brokerName: '',
-    brokerRut: '',
-    brokerPhone: '',
-    brokerEmail: ''
+    selectedStrategies: []
   })
 
   const generatePDF = async () => {
@@ -389,9 +381,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                         <span>Ingreso promedio esperado:</span>
                         <span className="font-bold">${Math.round(baseRent * 0.975).toLocaleString('es-CL')}</span>
                       </div>
-                      <div className="text-xs text-green-600 mt-1">✅ Arriendo rápido en 7-12 días = 99.6% de rentabilidad anual conservada</div>
-                      <div className="text-xs text-green-700 mt-1 font-semibold">💰 Ahorro: El propietario conserva 18-23 días de renta vs. esperar 30 días</div>
-                      <div className="text-xs text-green-600 mt-1">📈 Ganancia adicional: ${Math.round(baseRent * 0.975 * 0.6).toLocaleString('es-CL')} por arriendo rápido</div>
+                      <div className="text-xs text-green-600 mt-1">Basado en arriendo en día 12 (pérdida 0.4% rentabilidad anual)</div>
                     </div>
                     <div className="bg-white bg-opacity-60 p-3 rounded">
                       <div className="text-green-700 font-medium">✅ Ventajas:</div>
@@ -449,9 +439,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                         <span>Ingreso promedio esperado:</span>
                         <span className="font-bold">${Math.round(baseRent * 0.97).toLocaleString('es-CL')}</span>
                       </div>
-                      <div className="text-xs text-orange-600 mt-1">🌟 Arriendo en 12-15 días = 99.5% de rentabilidad anual conservada</div>
-                      <div className="text-xs text-orange-700 mt-1 font-semibold">💰 Ahorro: El propietario conserva 15 días de renta vs. esperar 30 días</div>
-                      <div className="text-xs text-orange-600 mt-1">📈 Ganancia adicional: ${Math.round(baseRent * 0.5).toLocaleString('es-CL')} por arriendo en medio mes</div>
+                      <div className="text-xs text-orange-600 mt-1">Basado en arriendo en día 15 (pérdida 0.5% rentabilidad anual)</div>
                     </div>
                     <div className="bg-white bg-opacity-60 p-3 rounded">
                       <div className="text-orange-700 font-medium">⚡ Ventajas:</div>
@@ -509,9 +497,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                         <span>Ingreso promedio esperado:</span>
                         <span className="font-bold">${Math.round(baseRent * 0.985).toLocaleString('es-CL')}</span>
                       </div>
-                      <div className="text-xs text-blue-600 mt-1">🔵 Arriendo en 15-20 días = 99.33% de rentabilidad anual conservada</div>
-                      <div className="text-xs text-blue-700 mt-1 font-semibold">💰 Ahorro: El propietario conserva 10 días de renta vs. esperar 30 días</div>
-                      <div className="text-xs text-blue-600 mt-1">📈 Ganancia adicional: ${Math.round(baseRent * 0.33).toLocaleString('es-CL')} por no extenderse a 30 días</div>
+                      <div className="text-xs text-blue-600 mt-1">Basado en arriendo en día 20 (pérdida 0.67% rentabilidad anual)</div>
                     </div>
                     <div className="bg-white bg-opacity-60 p-3 rounded">
                       <div className="text-blue-700 font-medium">🎯 Ventajas:</div>
@@ -531,7 +517,7 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
         {/* Nota importante */}
         <div className="bg-green-50 border border-green-300 rounded-lg p-4">
           <p className="text-sm text-green-800">
-            <strong>📌 Lógica de Rentabilidad:</strong> Arriendo rápido = mayor rentabilidad. Cada día que se arrienda antes, conserva 0.033% adicional de rentabilidad anual. 
+            <strong>📌 Lógica de Rentabilidad:</strong> Cada día sin arriendo representa una pérdida de 0.033% de la rentabilidad anual. 
             El sistema maximiza la rentabilidad asegurando que nunca se pierda más del 8.33% (equivalente a 1 mes de los 12 del año). 
             Cada estrategia balancea velocidad vs precio óptimo según sus preferencias.
           </p>
@@ -645,128 +631,67 @@ export default function AnalysisPreview({ formValues }: AnalysisPreviewProps) {
                   <span className="text-gray-800">{new Date().toLocaleDateString('es-CL')}</span>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide block mb-2">
-                  Firma del Propietario
-                </label>
-                <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-3">
-                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-2 relative touch-none">
-                    <canvas
-                      ref={canvasRef}
-                      width={450}
-                      height={120}
-                      className="block w-full h-full cursor-crosshair touch-none"
-                      style={{ maxWidth: '100%', height: 'auto' }}
-                      onMouseDown={startDrawing}
-                      onMouseMove={draw}
-                      onMouseUp={stopDrawing}
-                      onMouseLeave={stopDrawing}
-                      onTouchStart={startDrawing}
-                      onTouchMove={draw}
-                      onTouchEnd={stopDrawing}
-                    />
-                    {!hasSigned && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-gray-400 text-lg">✍️</span>
-                        <span className="text-gray-400 text-sm mt-1">Toque y arrastre para firmar</span>
-                        <span className="text-gray-300 text-xs mt-1">Funciona con mouse o dedo</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="text-xs text-blue-700">
-                      💡 Firma con mouse, stylus o dedo
-                    </div>
-                    <button
-                      type="button"
-                      onClick={clearSignature}
-                      className="text-xs text-red-600 hover:text-red-700 bg-red-50 px-2 py-1 rounded border hover:bg-red-100"
-                    >
-                      🗑️ Borrar y firmar de nuevo
-                    </button>
-                  </div>
-                  {hasSigned && (
-                    <div className="mt-2 text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
-                      ✅ Firma capturada correctamente
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
 
-          <div className="mt-8 bg-yellow-50 border border-yellow-300 p-6 rounded-lg">
-            <h4 className="font-bold text-yellow-800 mb-3">🎯 Estrategias Seleccionadas:</h4>
-            <p className="text-sm text-yellow-700 mb-4">Puede seleccionar 1, 2 o las 3 alternativas según sus preferencias</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer ${clientData.selectedStrategies.includes('A') ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                <input 
-                  type="checkbox" 
-                  value="A"
-                  className="w-5 h-5 text-green-600 rounded" 
-                  checked={clientData.selectedStrategies.includes('A')} 
-                  onChange={() => toggleStrategy('A')}
-                />
-                <div>
-                  <div className="font-semibold text-green-700">Estrategia A - Velocidad Rápida</div>
-                  <div className="text-xs text-green-600">Arriendo en 7-15 días</div>
+          {/* Firma Digital */}
+          <div className="mt-8 bg-gray-50 p-6 rounded-lg border">
+            <label className="text-sm font-semibold text-gray-700 uppercase tracking-wide block mb-4">
+              Firma Digital del Propietario
+            </label>
+            <div className="bg-white border-2 border-gray-300 rounded-lg p-4 relative">
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={200}
+                className="border rounded-lg w-full h-40 cursor-crosshair touch-none"
+                style={{ touchAction: 'none' }}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              {!hasSigned && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="text-gray-400 text-lg">Firme aquí con el mouse o dedo</span>
                 </div>
-              </label>
-              <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer ${clientData.selectedStrategies.includes('B') ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                <input 
-                  type="checkbox" 
-                  value="B"
-                  className="w-5 h-5 text-orange-600 rounded" 
-                  checked={clientData.selectedStrategies.includes('B')} 
-                  onChange={() => toggleStrategy('B')}
-                />
-                <div>
-                  <div className="font-semibold text-orange-700">Estrategia B - Equilibrio Óptimo</div>
-                  <div className="text-xs text-orange-600">Arriendo en 10-20 días</div>
-                </div>
-              </label>
-              <label className={`flex items-center space-x-3 p-4 border-2 rounded-lg cursor-pointer ${clientData.selectedStrategies.includes('C') ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                <input 
-                  type="checkbox" 
-                  value="C"
-                  className="w-5 h-5 text-blue-600 rounded" 
-                  checked={clientData.selectedStrategies.includes('C')} 
-                  onChange={() => toggleStrategy('C')}
-                />
-                <div>
-                  <div className="font-semibold text-blue-700">Estrategia C - Máxima Rentabilidad</div>
-                  <div className="text-xs text-blue-600">Arriendo en 15-30 días</div>
-                </div>
-              </label>
+              )}
             </div>
-            {clientData.selectedStrategies.length > 0 && (
-              <div className="mt-4 bg-green-50 border border-green-200 p-3 rounded">
-                <p className="text-sm text-green-800">
-                  ✅ Estrategias seleccionadas: {clientData.selectedStrategies.join(', ')}
-                </p>
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-sm text-gray-600">
+                {hasSigned ? (
+                  <span className="text-green-600 font-medium">✓ Documento firmado</span>
+                ) : (
+                  <span>Pendiente de firma</span>
+                )}
               </div>
-            )}
+              <button
+                type="button"
+                onClick={clearSignature}
+                className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Limpiar Firma
+              </button>
+            </div>
           </div>
-          
-          
-          <div className="mt-6 text-center text-sm text-gray-600">
-            <p><strong>Próximo paso:</strong> Una vez firmada esta propuesta, comenzaremos inmediatamente la gestión profesional 
-            de su propiedad según la estrategia seleccionada.</p>
-          </div>
+
         </div>
       </div>
 
-      {/* Botón de acción */}
-      <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={generatePDF}
-          className="btn btn-primary"
-        >
-          📄 Generar PDF
-        </button>
+      {/* Botón central para generar PDF */}
+      <div className="bg-white p-6 rounded-xl shadow-lg border">
+        <div className="flex justify-center">
+          <button
+            onClick={generatePDF}
+            className="px-12 py-4 bg-blue-700 text-white rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-blue-800 shadow-xl"
+          >
+            📄 Generar PDF
+          </button>
+        </div>
       </div>
-
     </div>
   )
 }

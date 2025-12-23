@@ -148,7 +148,7 @@ export default function ClientReviewPage() {
       notes: clientInfo.notes
     }
 
-    console.log('Respuesta del cliente:', response)
+    // Client response submitted successfully
     setSubmitted(true)
   }
 
@@ -237,7 +237,7 @@ export default function ClientReviewPage() {
                   <span className="text-gray-600">Valor de la propiedad:</span>
                   <span className="ml-2 font-medium">
                     {analysis.property.value_uf 
-                      ? `${analysis.property.value_uf.toLocaleString()} UF` 
+                      ? `${analysis.property.value_uf.toLocaleString('es-CL')} UF` 
                       : formatCurrency(analysis.property.value_clp)
                     }
                   </span>

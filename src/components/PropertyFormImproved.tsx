@@ -7,6 +7,12 @@ import { SavedAnalysisFormData, formDataToSavedAnalysis } from '@/types/saved-an
 import { useRouter } from 'next/navigation'
 import PropitalSync from './PropitalSync'
 import { transformToFormData, type PropitalProperty } from '@/lib/propitalIntegration'
+import { toast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/Modal'
+import HelpButton from '@/components/ui/HelpButton'
+import ProgressBar from '@/components/ui/ProgressBar'
+import LiveFeedback from '@/components/ui/LiveFeedback'
+import SmartInput from '@/components/ui/SmartInput'
 
 interface PropertyFormImprovedProps {
   form: UseFormReturn<RentalAnalysisForm>
@@ -24,16 +30,17 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
   const [analysisTitle, setAnalysisTitle] = useState('')
   const ufValue = parseFloat(formValues.uf_value_clp || '38000')
   const router = useRouter()
+  const { confirm, ConfirmModalComponent } = useConfirm()
 
   const sections = [
-    { id: 1, title: '🏠 Información de la Propiedad', icon: '🏠' },
-    { id: 2, title: '📊 Análisis y Plan Comercial', icon: '📊' }
+    { id: 1, title: 'Información de la Propiedad', icon: '🏠' },
+    { id: 2, title: 'Precio de Arriendo', icon: '💰' }
   ]
 
   const hasErrors = (sectionId: number) => {
     switch (sectionId) {
       case 1:
-        return !!(errors.property_address || errors.property_value_uf || errors.property_size_m2)
+        return !!(errors.property_address || errors.property_value_clp || errors.property_value_uf || errors.property_size_m2)
       case 2:
         return formValues.rent_currency === 'CLP' ? !!(errors.suggested_rent_clp) : !!(errors.suggested_rent_uf)
       default:
@@ -44,7 +51,9 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
   const isComplete = (sectionId: number) => {
     switch (sectionId) {
       case 1:
-        return !!(formValues.property_address && formValues.property_value_uf && formValues.property_size_m2)
+        return !!(formValues.property_address && 
+                 (formValues.property_value_clp || formValues.property_value_uf) && 
+                 formValues.property_size_m2)
       case 2:
         if (formValues.rent_currency === 'CLP') {
           return !!(formValues.suggested_rent_clp && parseFloat(formValues.suggested_rent_clp) > 0)
@@ -59,7 +68,7 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
   // Función para guardar el análisis
   const saveAnalysis = async () => {
     if (!analysisTitle.trim()) {
-      alert('Por favor ingresa un título para el análisis')
+      toast.warning('Título requerido', 'Por favor ingresa un título para el análisis')
       return
     }
 
@@ -122,7 +131,7 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
       const result = await response.json()
 
       if (response.ok) {
-        alert('✅ Análisis guardado exitosamente')
+        toast.success('¡Éxito!', 'Análisis guardado exitosamente')
         setShowSaveDialog(false)
         setAnalysisTitle('')
         
@@ -131,18 +140,20 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
           router.push('/analyses')
         }
       } else {
-        alert(`❌ Error al guardar: ${result.error}`)
+        toast.error('Error al guardar', result.error || 'Error desconocido')
       }
     } catch (error) {
       console.error('Error saving analysis:', error)
-      alert('❌ Error al guardar el análisis')
+      toast.error('Error de conexión', 'No se pudo guardar el análisis. Intente nuevamente.')
     } finally {
       setSaving(false)
     }
   }
 
   const canSaveAnalysis = () => {
-    return !!(formValues.property_address && formValues.property_value_clp && formValues.property_size_m2)
+    return !!(formValues.property_address && 
+             (formValues.property_value_clp || formValues.property_value_uf) && 
+             formValues.property_size_m2)
   }
 
   const handlePropitalPropertySelect = (property: PropitalProperty) => {
@@ -155,32 +166,44 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
       }
     })
     
-    alert(`✅ Propiedad cargada desde Propital: ${property.address}`)
+    toast.success('Propiedad cargada', `Datos importados desde Propital: ${property.address}`)
   }
 
   return (
     <div className="space-y-6">
+      {/* Barra de progreso */}
+      <ProgressBar 
+        currentStep={activeSection}
+        totalSteps={2}
+        completedSteps={[1, 2].filter(step => isComplete(step))}
+      />
+      {/* Retroalimentación en tiempo real */}
+      <LiveFeedback 
+        formValues={formValues}
+        currentSection={activeSection}
+      />
+      
       {/* Navegación por pestañas */}
       <div className="card">
         <div className="card-body p-0">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-0">
+          <div className="grid grid-cols-2 gap-0">
             {sections.map((section) => (
               <button
                 key={section.id}
                 type="button"
                 onClick={() => setActiveSection(section.id)}
                 className={`
-                  p-4 text-center transition-all duration-300 relative
+                  p-6 text-center transition-all duration-300 relative
                   ${activeSection === section.id 
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' 
+                    ? 'bg-blue-700 text-white shadow-md' 
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                   }
-                  ${section.id === 1 ? 'rounded-tl-2xl' : ''}
-                  ${section.id === sections.length ? 'rounded-tr-2xl' : ''}
+                  ${section.id === 1 ? 'rounded-tl-2xl rounded-bl-2xl' : 'rounded-tr-2xl rounded-br-2xl'}
+                  border-r-2 border-gray-100 last:border-r-0
                 `}
               >
-                <div className="text-2xl mb-2">{section.icon}</div>
-                <div className="text-sm font-semibold">{section.title}</div>
+                <div className="text-3xl mb-3">{section.icon}</div>
+                <div className="text-base font-semibold leading-tight">{section.title}</div>
                 
                 {/* Indicador de estado */}
                 {isComplete(section.id) && (
@@ -209,9 +232,32 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
         <div className="card-body">
           {activeSection === 1 && (
             <div className="space-y-6">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">🏠 Información de la Propiedad</h3>
-                <p className="text-gray-600">Datos básicos para el análisis de rentabilidad</p>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center bg-gradient-to-r from-green-100 to-blue-100 rounded-full px-6 py-2 mb-4">
+                  <span className="text-green-600 text-sm font-medium">📊 Paso 1 de 2</span>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-3">🏠 Cuéntenos sobre su Propiedad</h3>
+                <p className="text-lg text-gray-600 mb-4">Necesitamos conocer algunos datos básicos de su casa o departamento para calcular cuánto puede ganar</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-center justify-center space-x-2 text-blue-800">
+                      <span className="text-lg">⏱️</span>
+                      <span className="text-sm font-medium">Solo 3 minutos</span>
+                    </div>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center justify-center space-x-2 text-green-800">
+                      <span className="text-lg">🆓</span>
+                      <span className="text-sm font-medium">100% gratis</span>
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <div className="flex items-center justify-center space-x-2 text-purple-800">
+                      <span className="text-lg">🔒</span>
+                      <span className="text-sm font-medium">Datos seguros</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Integración con Propital */}
@@ -222,15 +268,50 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
 
               <div className="space-y-4">
                 <div>
-                  <label className="label">📍 Dirección Completa *</label>
-                  <input
-                    {...register('property_address', { required: 'La dirección es requerida' })}
-                    type="text"
-                    className={`input ${errors.property_address ? 'input-error' : ''}`}
-                    placeholder="Ej: Av. Providencia 123, Las Condes, Santiago"
-                  />
+                  <div className="flex items-center space-x-2 mb-2">
+                    <label className="label">📍 ¿Dónde está ubicada su propiedad? *</label>
+                    <HelpButton 
+                      title="¿Por qué necesitamos la dirección?"
+                      content="La dirección nos ayuda a analizar su sector y encontrar propiedades similares para calcular el mejor precio de arriendo. Esto hace que nuestro cálculo sea más preciso y le dé mejores resultados."
+                    />
+                  </div>
+                  <p id="address-help" className="text-sm text-gray-600 mb-2">Escriba la dirección completa para que podamos analizar el sector</p>
+                  <div className="relative">
+                    <input
+                      {...register('property_address', { required: 'Por favor escriba la dirección de su propiedad' })}
+                      type="text"
+                      className={`input pr-10 transition-colors ${
+                        errors.property_address ? 'border-red-500 bg-red-50' : 
+                        formValues.property_address ? 'border-green-500 bg-green-50' : 
+                        ''
+                      }`}
+                      placeholder="Ejemplo: Av. Providencia 1234, Las Condes, Santiago"
+                      aria-label="Dirección de la propiedad"
+                      aria-required="true"
+                      aria-invalid={errors.property_address ? 'true' : 'false'}
+                      aria-describedby="address-help address-status"
+                    />
+                    {formValues.property_address && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {!errors.property_address ? (
+                          <span className="text-green-500 font-bold">✓</span>
+                        ) : (
+                          <span className="text-red-500 font-bold">⚠️</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {formValues.property_address && !errors.property_address && (
+                    <div id="address-status" className="flex items-center space-x-2 mt-1">
+                      <span className="text-green-500 text-sm" aria-hidden="true">✓</span>
+                      <span className="text-green-600 text-xs">¡Perfecto! Dirección registrada correctamente</span>
+                    </div>
+                  )}
                   {errors.property_address && (
-                    <p className="error-text">{errors.property_address.message}</p>
+                    <div id="address-status" className="flex items-center space-x-2 mt-1" role="alert">
+                      <span className="text-red-500 text-sm" aria-hidden="true">⚠️</span>
+                      <span className="text-red-600 text-xs">{errors.property_address.message}</span>
+                    </div>
                   )}
                   
                   {/* Mapa */}
@@ -266,15 +347,35 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         <label className="label">💵 Valor Peso *</label>
                         <div className="relative">
                           <input
-                            {...register('property_value_clp', { required: 'El valor es requerido' })}
+                            {...register('property_value_clp', { 
+                              required: 'El valor en pesos es requerido',
+                              min: { value: 1000000, message: 'El valor debe ser mayor a $1.000.000' },
+                              max: { value: 50000000000, message: 'El valor parece demasiado alto' }
+                            })}
                             type="number"
-                            className={`input ${errors.property_value_clp ? 'input-error' : ''}`}
-                            placeholder="95000000"
+                            className={`input pr-16 transition-colors ${
+                              errors.property_value_clp ? 'border-red-500 bg-red-50' : 
+                              formValues.property_value_clp && parseFloat(formValues.property_value_clp) >= 1000000 ? 'border-green-500 bg-green-50' : 
+                              ''
+                            }`}
+                            placeholder="Ejemplo: 95000000 (sin puntos ni comas)"
+                            aria-label="Valor de la propiedad en pesos chilenos"
+                            aria-required="true"
+                            aria-invalid={errors.property_value_clp ? 'true' : 'false'}
                           />
                           <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">CLP</span>
                         </div>
+                        {formValues.property_value_clp && !errors.property_value_clp && (
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-green-500 text-sm">✓</span>
+                            <span className="text-green-600 text-xs">¡Excelente! Valor registrado correctamente</span>
+                          </div>
+                        )}
                         {errors.property_value_clp && (
-                          <p className="error-text">{errors.property_value_clp.message}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-red-500 text-sm">⚠️</span>
+                            <span className="text-red-600 text-xs">{errors.property_value_clp.message}</span>
+                          </div>
                         )}
                         <div className="mt-1 flex items-center space-x-2">
                           <button 
@@ -329,67 +430,92 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                   </div>
 
                   <div>
-                    <label className="label">📐 Metros Cuadrados *</label>
+                    <label className="label">📐 ¿Qué tamaño tiene su casa/departamento? *</label>
+                    <p className="text-sm text-gray-600 mb-2">Los metros cuadrados útiles (sin contar terrazas o balcones)</p>
                     <div className="relative">
                       <input
-                        {...register('property_size_m2', { required: 'Los m² son requeridos' })}
+                        {...register('property_size_m2', { 
+                          required: 'Los metros cuadrados son requeridos',
+                          min: { value: 10, message: 'El tamaño debe ser mayor a 10 m²' },
+                          max: { value: 10000, message: 'El tamaño parece demasiado grande' }
+                        })}
                         type="number"
-                        className={`input ${errors.property_size_m2 ? 'input-error' : ''}`}
-                        placeholder="75"
+                        className={`input pr-12 transition-colors ${
+                          errors.property_size_m2 ? 'border-red-500 bg-red-50' : 
+                          formValues.property_size_m2 && parseFloat(formValues.property_size_m2) >= 10 ? 'border-green-500 bg-green-50' : 
+                          ''
+                        }`}
+                        aria-label="Metros cuadrados de la propiedad"
+                        aria-required="true"
+                        aria-invalid={errors.property_size_m2 ? 'true' : 'false'}
+                        placeholder="Ejemplo: 75"
                       />
                       <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">m²</span>
                     </div>
+                    {formValues.property_size_m2 && !errors.property_size_m2 && (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-green-500 text-sm">✓</span>
+                        <span className="text-green-600 text-xs">¡Perfecto! Tamaño registrado correctamente</span>
+                      </div>
+                    )}
                     {errors.property_size_m2 && (
-                      <p className="error-text">{errors.property_size_m2.message}</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-red-500 text-sm">⚠️</span>
+                        <span className="text-red-600 text-xs">{errors.property_size_m2.message}</span>
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
-                    <label className="label">🛏️ Dormitorios</label>
+                    <label className="label">🛏️ ¿Cuántas piezas para dormir tiene?</label>
+                    <p className="text-sm text-gray-600 mb-2">Solo cuente las habitaciones con cama</p>
                     <select {...register('bedrooms')} className="input">
-                      <option value="1">1 Dormitorio</option>
-                      <option value="2">2 Dormitorios</option>
-                      <option value="3">3 Dormitorios</option>
-                      <option value="4">4+ Dormitorios</option>
+                      <option value="1">1 pieza (monoambiente o 1D)</option>
+                      <option value="2">2 piezas (2 dormitorios)</option>
+                      <option value="3">3 piezas (3 dormitorios)</option>
+                      <option value="4">4 o más piezas</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="label">🚿 Baños</label>
+                    <label className="label">🚿 ¿Cuántos baños tiene?</label>
+                    <p className="text-sm text-gray-600 mb-2">Incluya baños completos y medios baños</p>
                     <select {...register('bathrooms')} className="input">
-                      <option value="1">1 Baño</option>
-                      <option value="2">2 Baños</option>
-                      <option value="3">3 Baños</option>
-                      <option value="4">4+ Baños</option>
+                      <option value="1">1 baño</option>
+                      <option value="2">2 baños</option>
+                      <option value="3">3 baños</option>
+                      <option value="4">4 o más baños</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
+                <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
+                  <div className="w-full">
                     <label className="label">🚗 Estacionamientos</label>
                     <input
                       {...register('parking_spaces')}
                       type="number"
                       min="0"
                       defaultValue="0"
-                      className="input"
-                      placeholder="0"
+                      className="input w-full"
+                      placeholder="Cantidad de estacionamientos"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Número de estacionamientos incluidos</p>
                   </div>
 
-                  <div>
+                  <div className="w-full">
                     <label className="label">📦 Bodegas</label>
                     <input
                       {...register('storage_units')}
                       type="number"
                       min="0"
                       defaultValue="0"
-                      className="input"
-                      placeholder="0"
+                      className="input w-full"
+                      placeholder="Cantidad de bodegas"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Número de bodegas incluidas</p>
                   </div>
                 </div>
                 
@@ -418,18 +544,33 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                 <button
                   type="button"
                   onClick={() => setShowSaveDialog(true)}
-                  className="btn btn-success"
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    !canSaveAnalysis() ? 
+                    'bg-gray-300 text-gray-600 cursor-not-allowed' :
+                    'bg-green-500 text-white hover:bg-green-600 shadow-md'
+                  }`}
                   disabled={!canSaveAnalysis()}
                 >
-                  💾 Guardar Análisis
+                  <div className="flex items-center space-x-2">
+                    <span>💾</span>
+                    <span>Guardar</span>
+                  </div>
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveSection(2)}
-                  className="btn btn-primary"
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                    !isComplete(1) ? 
+                    'bg-gray-300 text-gray-600 cursor-not-allowed' :
+                    'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg'
+                  }`}
                   disabled={!isComplete(1)}
                 >
-                  Siguiente: Análisis y Plan Comercial →
+                  <div className="flex items-center space-x-2">
+                    <span>💰</span>
+                    <span>Siguiente: Calcular Precio</span>
+                    <span>→</span>
+                  </div>
                 </button>
               </div>
             </div>
@@ -437,15 +578,33 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
 
           {activeSection === 2 && (
             <div className="space-y-6">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">💰 Análisis de Precio de Mercado</h3>
-                <p className="text-gray-600">Compara con propiedades similares y determina precio óptimo</p>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center bg-gradient-to-r from-purple-100 to-pink-100 rounded-full px-6 py-2 mb-4">
+                  <span className="text-purple-600 text-sm font-medium">💰 Paso 2 de 2</span>
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-3">💰 ¿Cuánto Cobrar de Arriendo?</h3>
+                <p className="text-lg text-gray-600 mb-4">Le ayudamos a encontrar el precio perfecto para ganar más dinero y arrendar rápido</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center justify-center space-x-2 text-green-800">
+                      <span className="text-xl">✨</span>
+                      <span className="text-sm font-medium">Análisis automático de miles de propiedades</span>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-center space-x-2 text-blue-800">
+                      <span className="text-xl">📊</span>
+                      <span className="text-sm font-medium">Precio optimizado para su sector</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4">
                 {/* Propiedades Similares */}
                 <div className="space-y-4">
-                  <label className="label">🏘️ Propiedades Similares:</label>
+                  <label className="label">🏘️ ¿Conoce propiedades parecidas en su sector? (Opcional)</label>
+                  <p className="text-sm text-gray-600 mb-3">Si sabe de casas o departamentos similares que se arriendan cerca, agréguelas aquí para un cálculo más preciso</p>
                   
                   {/* Propiedad 1 */}
                   <div className="border-2 border-gray-200 rounded-lg p-4">
@@ -468,39 +627,51 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         placeholder="Precio arriendo CLP"
                         className="input input-sm"
                       />
-                      <div className="grid grid-cols-4 gap-1">
-                        <input
-                          {...register('comparable_1_bedrooms')}
-                          type="number"
-                          min="0"
-                          defaultValue="1"
-                          placeholder="Dorm"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_1_bathrooms')}
-                          type="number"
-                          min="0"
-                          defaultValue="1"
-                          placeholder="Baños"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_1_parking')}
-                          type="number"
-                          min="0"
-                          defaultValue="0"
-                          placeholder="Est"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_1_storage')}
-                          type="number"
-                          min="0"
-                          defaultValue="0"
-                          placeholder="Bod"
-                          className="input input-sm"
-                        />
+                      <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-4 sm:gap-2">
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Dormitorios</label>
+                          <input
+                            {...register('comparable_1_bedrooms')}
+                            type="number"
+                            min="0"
+                            defaultValue="1"
+                            placeholder="Dormitorios"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Baños</label>
+                          <input
+                            {...register('comparable_1_bathrooms')}
+                            type="number"
+                            min="0"
+                            defaultValue="1"
+                            placeholder="Baños"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Estacionamientos</label>
+                          <input
+                            {...register('comparable_1_parking')}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            placeholder="Estacionamientos"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Bodegas</label>
+                          <input
+                            {...register('comparable_1_storage')}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            placeholder="Bodegas"
+                            className="input input-sm w-full"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -526,39 +697,51 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         placeholder="Precio arriendo CLP"
                         className="input input-sm"
                       />
-                      <div className="grid grid-cols-4 gap-1">
-                        <input
-                          {...register('comparable_2_bedrooms')}
-                          type="number"
-                          min="0"
-                          defaultValue="1"
-                          placeholder="Dorm"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_2_bathrooms')}
-                          type="number"
-                          min="0"
-                          defaultValue="1"
-                          placeholder="Baños"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_2_parking')}
-                          type="number"
-                          min="0"
-                          defaultValue="0"
-                          placeholder="Est"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_2_storage')}
-                          type="number"
-                          min="0"
-                          defaultValue="0"
-                          placeholder="Bod"
-                          className="input input-sm"
-                        />
+                      <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-4 sm:gap-2">
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Dormitorios</label>
+                          <input
+                            {...register('comparable_2_bedrooms')}
+                            type="number"
+                            min="0"
+                            defaultValue="1"
+                            placeholder="Dormitorios"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Baños</label>
+                          <input
+                            {...register('comparable_2_bathrooms')}
+                            type="number"
+                            min="0"
+                            defaultValue="1"
+                            placeholder="Baños"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Estacionamientos</label>
+                          <input
+                            {...register('comparable_2_parking')}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            placeholder="Estacionamientos"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Bodegas</label>
+                          <input
+                            {...register('comparable_2_storage')}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            placeholder="Bodegas"
+                            className="input input-sm w-full"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -584,39 +767,51 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         placeholder="Precio arriendo CLP"
                         className="input input-sm"
                       />
-                      <div className="grid grid-cols-4 gap-1">
-                        <input
-                          {...register('comparable_3_bedrooms')}
-                          type="number"
-                          min="0"
-                          defaultValue="1"
-                          placeholder="Dorm"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_3_bathrooms')}
-                          type="number"
-                          min="0"
-                          defaultValue="1"
-                          placeholder="Baños"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_3_parking')}
-                          type="number"
-                          min="0"
-                          defaultValue="0"
-                          placeholder="Est"
-                          className="input input-sm"
-                        />
-                        <input
-                          {...register('comparable_3_storage')}
-                          type="number"
-                          min="0"
-                          defaultValue="0"
-                          placeholder="Bod"
-                          className="input input-sm"
-                        />
+                      <div className="space-y-2 sm:space-y-0 sm:grid sm:grid-cols-4 sm:gap-2">
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Dormitorios</label>
+                          <input
+                            {...register('comparable_3_bedrooms')}
+                            type="number"
+                            min="0"
+                            defaultValue="1"
+                            placeholder="Dormitorios"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Baños</label>
+                          <input
+                            {...register('comparable_3_bathrooms')}
+                            type="number"
+                            min="0"
+                            defaultValue="1"
+                            placeholder="Baños"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Estacionamientos</label>
+                          <input
+                            {...register('comparable_3_parking')}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            placeholder="Estacionamientos"
+                            className="input input-sm w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-600 block sm:hidden">Bodegas</label>
+                          <input
+                            {...register('comparable_3_storage')}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            placeholder="Bodegas"
+                            className="input input-sm w-full"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -627,16 +822,57 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="mb-4">
                     <label className="label">💵 Precio Sugerido de Arriendo *</label>
-                    <button
-                      type="button"
-                      onClick={onSuggestRent}
-                      className="btn btn-secondary text-xs py-2 px-3"
-                      disabled={!formValues.property_size_m2}
-                    >
-                      ✨ Sugerir Precio
-                    </button>
+                    
+                    {/* Explicación clara del botón */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
+                      <div className="flex items-start space-x-3">
+                        <div className="text-blue-600 text-xl">📊</div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-blue-900 mb-2">¿Cómo calcular el precio ideal?</h4>
+                          <p className="text-sm text-blue-800 mb-3">
+                            Nuestro sistema analiza propiedades similares en tu zona y calcula automáticamente 
+                            el precio de arriendo que te generará más ingresos.
+                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="text-xs text-blue-700 space-y-1">
+                              <div>• Usa datos reales del mercado</div>
+                              <div>• Considera el tamaño y ubicación</div>
+                              <div>• Optimiza para arrendar rápido</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={onSuggestRent}
+                              className={`text-sm px-6 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                                !formValues.property_size_m2 ? 
+                                'bg-gray-300 text-gray-600 cursor-not-allowed' :
+                                'bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 shadow-lg'
+                              }`}
+                              disabled={!formValues.property_size_m2}
+                            >
+                              {!formValues.property_size_m2 ? (
+                                <div className="flex items-center space-x-2">
+                                  <span>⚠️</span>
+                                  <span>Ingresa los m² primero</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <span>📊</span>
+                                  <span>Calcular Precio Ideal</span>
+                                  <span>✨</span>
+                                </div>
+                              )}
+                            </button>
+                          </div>
+                          {!formValues.property_size_m2 && (
+                            <div className="mt-2 text-xs text-orange-700 bg-orange-50 rounded p-2">
+                              ⚠️ Para calcular el precio ideal necesitamos saber los metros cuadrados de tu propiedad
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Toggle de Moneda */}
@@ -707,14 +943,22 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         <p className="error-text">{errors.suggested_rent_uf.message}</p>
                       )}
                       <p className="text-sm text-gray-500 mt-1">
-                        💱 Equivale aproximadamente a ${Math.round(parseFloat(formValues.suggested_rent_uf || '0') * parseFloat(formValues.uf_value_clp || '38000')).toLocaleString()} CLP
+                        💱 Equivale aproximadamente a ${Math.round(parseFloat(formValues.suggested_rent_uf || '0') * parseFloat(formValues.uf_value_clp || '38000')).toLocaleString('es-CL')} CLP
                       </p>
                     </div>
                   )}
 
-                  <p className="text-sm text-gray-600 mt-1">
-                    💡 Este precio será la base para los planes A, B y C
-                  </p>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-green-600 text-sm">💡</span>
+                      <div className="text-xs text-green-800">
+                        <div className="font-medium mb-1">Importante:</div>
+                        <div>• Este precio será la base para crear los 3 planes comerciales (A, B y C)</div>
+                        <div>• Puedes ajustarlo manualmente si conoces mejor el mercado</div>
+                        <div>• Un precio bien calculado significa arrendar más rápido y ganar más dinero</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Precio de Captación de la Propiedad */}
@@ -792,7 +1036,7 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">UF</span>
                       </div>
                       <p className="text-sm text-gray-500 mt-1">
-                        💱 Equivale aproximadamente a ${Math.round(parseFloat(formValues.capture_price_uf || '0') * parseFloat(formValues.uf_value_clp || '38000')).toLocaleString()} CLP
+                        💱 Equivale aproximadamente a ${Math.round(parseFloat(formValues.capture_price_uf || '0') * parseFloat(formValues.uf_value_clp || '38000')).toLocaleString('es-CL')} CLP
                       </p>
                     </div>
                   )}
@@ -819,14 +1063,6 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                     disabled={!canSaveAnalysis()}
                   >
                     💾 Guardar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveSection(3)}
-                    className="btn btn-primary"
-                    disabled={!isComplete(2)}
-                  >
-                    Siguiente: Configuración →
                   </button>
                 </div>
               </div>
@@ -930,9 +1166,9 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
                         
                         const result = await response.json()
                         if (result.success) {
-                          alert('✅ Propuesta enviada exitosamente al cliente')
+                          toast.success('Enviado', 'Propuesta enviada exitosamente al cliente')
                         } else {
-                          alert('❌ Error al enviar la propuesta')
+                          toast.error('Error', 'No se pudo enviar la propuesta')
                         }
                       } catch (error) {
                         alert('❌ Error al enviar la propuesta')
@@ -1038,6 +1274,8 @@ export default function PropertyFormImproved({ form, formValues, onSuggestRent }
           </div>
         </div>
       )}
+      
+      <ConfirmModalComponent />
     </div>
   )
 }

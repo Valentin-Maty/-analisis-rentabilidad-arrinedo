@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SavedAnalysis, SavedAnalysisFormData, formDataToSavedAnalysis } from '@/types/saved-analysis';
 import { getAnalysisById, saveAnalysis, deleteAnalysis, updateAnalysis } from '@/lib/analysisStore';
+import { validateId, validateRentalAnalysis } from '@/lib/validation';
+import { handleApiError } from '@/lib/errorHandler';
 
 // GET - Obtener un análisis específico por ID
 export async function GET(
@@ -10,9 +12,11 @@ export async function GET(
   try {
     const { id } = params;
 
-    if (!id) {
+    // Validar ID
+    const idValidation = validateId(id);
+    if (!idValidation.isValid) {
       return NextResponse.json(
-        { error: 'ID de análisis requerido' },
+        { error: 'ID inválido', details: idValidation.errors },
         { status: 400 }
       );
     }
@@ -28,11 +32,7 @@ export async function GET(
 
     return NextResponse.json({ analysis });
   } catch (error) {
-    console.error('Error fetching analysis:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return handleApiError(error, `GET /api/analyses/${params?.id}`, 'Error al obtener análisis');
   }
 }
 
@@ -44,19 +44,31 @@ export async function PUT(
   try {
     const { id } = params;
     const body = await request.json();
-    const formData: SavedAnalysisFormData = body;
 
-    if (!id) {
+    // Validar ID
+    const idValidation = validateId(id);
+    if (!idValidation.isValid) {
       return NextResponse.json(
-        { error: 'ID de análisis requerido' },
+        { error: 'ID inválido', details: idValidation.errors },
         { status: 400 }
       );
     }
 
-    // Validación básica
-    if (!formData.title || !formData.property_address || !formData.property_value_clp) {
+    // Validar datos del análisis
+    const validation = validateRentalAnalysis(body);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: título, dirección y valor de la propiedad' },
+        { error: 'Datos de análisis inválidos', details: validation.errors },
+        { status: 400 }
+      );
+    }
+
+    const formData: SavedAnalysisFormData = body;
+
+    // Validaciones adicionales
+    if (!formData.title || formData.title.trim().length < 3) {
+      return NextResponse.json(
+        { error: 'El título debe tener al menos 3 caracteres' },
         { status: 400 }
       );
     }
@@ -95,11 +107,7 @@ export async function PUT(
       message: 'Análisis actualizado exitosamente'
     });
   } catch (error) {
-    console.error('Error updating analysis:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return handleApiError(error, `PUT /api/analyses/${params?.id}`, 'Error al actualizar análisis');
   }
 }
 
@@ -111,9 +119,11 @@ export async function DELETE(
   try {
     const { id } = params;
 
-    if (!id) {
+    // Validar ID
+    const idValidation = validateId(id);
+    if (!idValidation.isValid) {
       return NextResponse.json(
-        { error: 'ID de análisis requerido' },
+        { error: 'ID inválido', details: idValidation.errors },
         { status: 400 }
       );
     }
@@ -158,11 +168,7 @@ export async function DELETE(
       }
     });
   } catch (error) {
-    console.error('Error deleting analysis:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return handleApiError(error, `DELETE /api/analyses/${params?.id}`, 'Error al eliminar análisis');
   }
 }
 
@@ -175,9 +181,11 @@ export async function PATCH(
     const { id } = params;
     const body = await request.json();
 
-    if (!id) {
+    // Validar ID
+    const idValidation = validateId(id);
+    if (!idValidation.isValid) {
       return NextResponse.json(
-        { error: 'ID de análisis requerido' },
+        { error: 'ID inválido', details: idValidation.errors },
         { status: 400 }
       );
     }
@@ -228,10 +236,6 @@ export async function PATCH(
       message: 'Análisis actualizado exitosamente'
     });
   } catch (error) {
-    console.error('Error patching analysis:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return handleApiError(error, `PATCH /api/analyses/${params?.id}`, 'Error al actualizar análisis');
   }
 }

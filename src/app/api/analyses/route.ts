@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SavedAnalysis, AnalysisFilters, AnalysisListResponse, SavedAnalysisFormData, formDataToSavedAnalysis } from '@/types/saved-analysis';
 import { getAllAnalyses, saveAnalysis } from '@/lib/analysisStore';
+import { validatePagination, validateRentalAnalysis, ValidationResult } from '@/lib/validation';
+import { handleApiError } from '@/lib/errorHandler';
 
 // GET - Obtener análisis con filtros opcionales
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    
+    // Validar parámetros de paginación
+    const paginationData = {
+      page: searchParams.get('page'),
+      limit: searchParams.get('pageSize') || searchParams.get('limit'),
+      sortBy: searchParams.get('sortBy'),
+      sortOrder: searchParams.get('sortOrder')
+    };
+
+    const paginationValidation = validatePagination(paginationData);
+    if (!paginationValidation.isValid) {
+      return NextResponse.json(
+        { error: 'Invalid pagination parameters', details: paginationValidation.errors },
+        { status: 400 }
+      );
+    }
+
+    const { page, limit: pageSize, sortBy, sortOrder } = paginationValidation.data!;
     
     // Obtener parámetros de filtro
     const filters: AnalysisFilters = {
@@ -18,12 +38,9 @@ export async function GET(request: NextRequest) {
       bedrooms: searchParams.get('bedrooms') ? parseInt(searchParams.get('bedrooms')!) : undefined,
       bathrooms: searchParams.get('bathrooms') ? parseInt(searchParams.get('bathrooms')!) : undefined,
       tags: searchParams.get('tags')?.split(',') || undefined,
-      sortBy: (searchParams.get('sortBy') as AnalysisFilters['sortBy']) || 'updated_at',
-      sortOrder: (searchParams.get('sortOrder') as AnalysisFilters['sortOrder']) || 'desc',
+      sortBy: sortBy || 'updated_at',
+      sortOrder: sortOrder || 'desc',
     };
-
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
     // Obtener todos los análisis del store
     let analyses = getAllAnalyses();
@@ -92,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     // Ordenar
     filteredAnalyses.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: string | number | Date, bValue: string | number | Date;
 
       switch (filters.sortBy) {
         case 'title':
@@ -136,11 +153,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching analyses:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'GET /api/analyses', 'Error al obtener análisis');
   }
 }
 
@@ -148,12 +161,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Validar estructura de datos con validador especializado
+    const validation = validateRentalAnalysis(body);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: 'Datos de análisis inválidos', details: validation.errors },
+        { status: 400 }
+      );
+    }
+
     const formData: SavedAnalysisFormData = body;
 
-    // Validación básica
-    if (!formData.title || !formData.property_address || !formData.property_value_clp) {
+    // Validaciones adicionales de campos requeridos para guardado
+    if (!formData.title || formData.title.trim().length < 3) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: título, dirección y valor de la propiedad' },
+        { error: 'El título debe tener al menos 3 caracteres' },
+        { status: 400 }
+      );
+    }
+
+    if (!formData.broker_email) {
+      return NextResponse.json(
+        { error: 'Email del corredor es requerido' },
         { status: 400 }
       );
     }
@@ -187,10 +217,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error saving analysis:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'POST /api/analyses', 'Error al guardar análisis');
   }
 }

@@ -58,13 +58,13 @@ export default function AnalysisResultsImproved({
         </div>
         <div className="card-body">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-100">
+            <div className="text-center p-4 bg-blue-50 rounded-xl border-2 border-blue-100">
               <div className="text-3xl mb-2">📍</div>
               <div className="text-sm text-gray-600 mb-1">Dirección</div>
               <div className="font-bold text-gray-900 text-sm">{analysis.property.address}</div>
             </div>
             
-            <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border-2 border-green-100">
+            <div className="text-center p-4 bg-green-50 rounded-xl border-2 border-green-100">
               <div className="text-3xl mb-2">💎</div>
               <div className="text-sm text-gray-600 mb-1">Valor de la propiedad</div>
               <div className="font-bold text-gray-900 text-lg">
@@ -75,16 +75,16 @@ export default function AnalysisResultsImproved({
               </div>
             </div>
             
-            <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-100">
+            <div className="text-center p-4 bg-purple-50 rounded-xl border-2 border-purple-100">
               <div className="text-3xl mb-2">📐</div>
               <div className="text-sm text-gray-600 mb-1">Superficie</div>
               <div className="font-bold text-gray-900 text-lg">{analysis.property.size_m2} m²</div>
             </div>
             
-            <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border-2 border-orange-100">
+            <div className="text-center p-4 bg-orange-50 rounded-xl border-2 border-orange-100">
               <div className="text-3xl mb-2">💰</div>
               <div className="text-sm text-gray-600 mb-1">Precio Inicial</div>
-              <div className="font-bold text-primary-600 text-lg">
+              <div className="font-bold text-blue-700 text-lg">
                 {rentCurrency === 'UF' && rentValueUF ? (
                   <>
                     <div>{rentValueUF} UF</div>
@@ -110,9 +110,9 @@ export default function AnalysisResultsImproved({
               </div>
               <div className="text-3xl">{getCapRateIcon(calculations.cap_rate)}</div>
             </div>
-            <div className="metric-label">CAP Rate</div>
+            <div className="metric-label">Rentabilidad Anual</div>
             <div className="text-xs opacity-75 mt-2">
-              {getCapRateDescription(capRateAnalysis.comparison_to_market)}
+              Cuánto gana por cada peso invertido
             </div>
           </div>
 
@@ -136,9 +136,9 @@ export default function AnalysisResultsImproved({
               </div>
               <div className="text-3xl">💵</div>
             </div>
-            <div className="metric-label">Ingreso Neto Mensual</div>
+            <div className="metric-label">Ganancia Mensual Real</div>
             <div className="text-xs opacity-75 mt-2">
-              Después de gastos operacionales
+              Lo que le queda cada mes después de gastos
             </div>
           </div>
 
@@ -149,9 +149,9 @@ export default function AnalysisResultsImproved({
               </div>
               <div className="text-3xl">⚖️</div>
             </div>
-            <div className="metric-label">Reducción Máxima Viable</div>
+            <div className="metric-label">Descuento Recomendado</div>
             <div className="text-xs opacity-75 mt-2">
-              Para evitar 1 mes de vacancia
+              Cuánto puede bajar el precio para arrendar más rápido
             </div>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function AnalysisResultsImproved({
           <div className="card-header">
             <h4 className="text-xl font-bold text-white flex items-center">
               <span className="text-2xl mr-2">🎯</span>
-              Análisis de CAP Rate
+              Análisis de Rentabilidad
             </h4>
           </div>
           <div className="card-body">
@@ -192,12 +192,12 @@ export default function AnalysisResultsImproved({
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-xl border border-green-200">
+              <div className="bg-green-50 p-4 rounded-xl border border-green-200">
                 <div className="text-center">
                   <div className={`text-4xl font-bold mb-2 ${getCapRateColor(calculations.cap_rate)}`}>
                     {calculations.cap_rate.toFixed(2)}%
                   </div>
-                  <div className="text-sm font-medium text-gray-700">CAP Rate Final</div>
+                  <div className="text-sm font-medium text-gray-700">Rentabilidad Final</div>
                   <div className="text-xs text-gray-600 mt-2">
                     {getCapRateDescription(capRateAnalysis.comparison_to_market)}
                   </div>
@@ -223,10 +223,10 @@ export default function AnalysisResultsImproved({
                   +{(100 - vacancyImpact.percentage_annual_loss).toFixed(1)}%
                 </div>
                 <div className="text-sm text-green-600 font-medium">
-                  Rentabilidad conservada al arrendar en 30 días
+                  Ganancia que mantiene si arrienda rápido (30 días)
                 </div>
                 <div className="text-xs text-green-500 mt-2">
-                  Arriendo rápido = Mayor rentabilidad anual para el propietario
+                  ✅ Arrendar rápido = Más dinero en su bolsillo al final del año
                 </div>
               </div>
               
@@ -235,25 +235,25 @@ export default function AnalysisResultsImproved({
                   <div className="text-2xl font-bold text-blue-700">
                     {formatCurrency(vacancyImpact.lost_income_clp)}
                   </div>
-                  <div className="text-sm text-blue-600">Ingreso Mensual Asegurado</div>
+                  <div className="text-sm text-blue-600">Dinero Seguro Cada Mes</div>
                 </div>
                 
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
                   <div className="text-2xl font-bold text-blue-700">
                     {vacancyImpact.break_even_reduction_percentage.toFixed(1)}%
                   </div>
-                  <div className="text-sm text-blue-600">Reducción Máxima</div>
+                  <div className="text-sm text-blue-600">Rebaja Máxima Segura</div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <div className="flex items-start space-x-3">
                   <div className="text-2xl">💡</div>
                   <div>
-                    <div className="font-bold text-blue-800 mb-1">Estrategia Recomendada</div>
+                    <div className="font-bold text-blue-800 mb-1">Consejo de Experto</div>
                     <div className="text-sm text-blue-700">
-                      Es mejor reducir el precio hasta un {vacancyImpact.break_even_reduction_percentage.toFixed(0)}% 
-                      que mantener la propiedad vacante por un mes completo.
+                      Es mucho mejor bajar el precio hasta un {vacancyImpact.break_even_reduction_percentage.toFixed(0)}% 
+                      que tener la casa vacía un mes entero perdiendo dinero.
                     </div>
                   </div>
                 </div>

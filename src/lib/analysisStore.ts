@@ -2,6 +2,7 @@
 // En producción esto debería ser reemplazado por una base de datos real
 
 import { SavedAnalysis } from '@/types/saved-analysis';
+import analysisCache from '@/lib/cache/analysisCache';
 
 // Store en memoria para desarrollo
 let analyses: SavedAnalysis[] = [];
@@ -98,13 +99,36 @@ function initializeStore() {
 }
 
 export function getAllAnalyses(): SavedAnalysis[] {
+  // Intentar obtener del cache primero
+  const cached = analysisCache.getList({});
+  if (cached) {
+    return cached;
+  }
+  
   initializeStore();
-  return [...analyses];
+  const result = [...analyses];
+  
+  // Guardar en cache por 5 minutos
+  analysisCache.setList({}, result);
+  return result;
 }
 
 export function getAnalysisById(id: string): SavedAnalysis | undefined {
+  // Intentar obtener del cache primero
+  const cached = analysisCache.get(id);
+  if (cached) {
+    return cached;
+  }
+  
   initializeStore();
-  return analyses.find(analysis => analysis.id === id);
+  const result = analyses.find(analysis => analysis.id === id);
+  
+  // Si se encuentra, guardarlo en cache
+  if (result) {
+    analysisCache.set(id, result);
+  }
+  
+  return result;
 }
 
 export function saveAnalysis(analysis: SavedAnalysis): SavedAnalysis {
@@ -117,6 +141,11 @@ export function saveAnalysis(analysis: SavedAnalysis): SavedAnalysis {
     analyses.push(analysis);
   }
   
+  // Actualizar cache
+  analysisCache.set(analysis.id, analysis);
+  // Invalidar listas para forzar recarga
+  analysisCache.invalidateLists();
+  
   return analysis;
 }
 
@@ -126,6 +155,8 @@ export function deleteAnalysis(id: string): boolean {
   
   if (index >= 0) {
     analyses.splice(index, 1);
+    // Invalidar cache
+    analysisCache.invalidate(id);
     return true;
   }
   
@@ -138,6 +169,10 @@ export function updateAnalysis(id: string, updates: Partial<SavedAnalysis>): Sav
   
   if (index >= 0) {
     analyses[index] = { ...analyses[index], ...updates };
+    // Actualizar cache
+    analysisCache.set(id, analyses[index]);
+    // Invalidar listas para forzar recarga
+    analysisCache.invalidateLists();
     return analyses[index];
   }
   

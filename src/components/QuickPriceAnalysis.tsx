@@ -73,12 +73,45 @@ export default function QuickPriceAnalysis() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6">
+      {/* Header mejorado */}
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">🏠 Calculadora de Precio de Arriendo</h1>
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          Obtén una referencia de precio para tu propiedad comparándola con arriendos similares del mercado
+        </p>
+      </div>
+
+      {/* Pasos del proceso */}
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+          <div className="text-3xl mb-3 text-center">1️⃣</div>
+          <h3 className="font-bold text-blue-900 text-center mb-2">Ingresa los datos</h3>
+          <p className="text-sm text-blue-700 text-center">
+            Añade información de propiedades similares que estén en arriendo
+          </p>
+        </div>
+        <div className="bg-green-50 rounded-xl p-6 border-2 border-green-200">
+          <div className="text-3xl mb-3 text-center">2️⃣</div>
+          <h3 className="font-bold text-green-900 text-center mb-2">Calcula el precio</h3>
+          <p className="text-sm text-green-700 text-center">
+            Nuestro algoritmo analiza los comparables y sugiere un precio
+          </p>
+        </div>
+        <div className="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+          <div className="text-3xl mb-3 text-center">3️⃣</div>
+          <h3 className="font-bold text-purple-900 text-center mb-2">Obtén resultados</h3>
+          <p className="text-sm text-purple-700 text-center">
+            Recibe una estimación profesional basada en datos reales del mercado
+          </p>
+        </div>
+      </div>
+
       <div className="card">
         <div className="card-body">
-          <h2 className="text-2xl font-bold mb-2">🔍 Análisis Rápido de Precio</h2>
+          <h2 className="text-2xl font-bold mb-2">📊 Análisis Comparativo</h2>
           <p className="text-gray-600 mb-6">
-            Pre-análisis para entregar referencia de precio al cliente usando propiedades comparables
+            Compara tu propiedad con arriendos similares para obtener una referencia de precio precisa
           </p>
 
           {/* Información de la propiedad objetivo */}
@@ -185,7 +218,7 @@ export default function QuickPriceAnalysis() {
 
                 {comp.price && comp.m2 && (
                   <div className="mt-2 text-sm text-gray-600">
-                    💰 Precio por m²: ${Math.round(parseFloat(comp.price) / parseFloat(comp.m2)).toLocaleString()} CLP/m²
+                    💰 Precio por m²: ${Math.round(parseFloat(comp.price) / parseFloat(comp.m2)).toLocaleString('es-CL')} CLP/m²
                   </div>
                 )}
               </div>
@@ -214,7 +247,7 @@ export default function QuickPriceAnalysis() {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h3 className="font-bold text-green-800 mb-2">💡 Precio Sugerido</h3>
                   <p className="text-2xl font-bold text-green-700">
-                    ${suggestedPrice.toLocaleString()} CLP/mes
+                    ${suggestedPrice.toLocaleString('es-CL')} CLP/mes
                   </p>
                 </div>
               )}
@@ -240,15 +273,51 @@ export default function QuickPriceAnalysis() {
                 )}
               </div>
 
-              {/* Información sobre el uso */}
-              <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-bold text-yellow-800 mb-2">📋 Sobre esta herramienta</h4>
-                <ul className="text-sm text-yellow-700 space-y-1">
-                  <li>• <strong>Análisis rápido:</strong> Para dar referencia usando propiedades similares</li>
-                  <li>• <strong>3-4 comparables máximo:</strong> Enfoque en calidad vs cantidad</li>
-                  <li>• <strong>Independiente:</strong> Se puede usar sin generar planes comerciales</li>
-                  <li>• <strong>Para corredores:</strong> Ideal antes de visitar la propiedad</li>
-                </ul>
+              {/* Información mejorada sobre el uso */}
+              <div className="mt-6 grid md:grid-cols-2 gap-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-bold text-blue-800 mb-3">💡 ¿Cómo funciona?</h4>
+                  <ul className="text-sm text-blue-700 space-y-2">
+                    <li className="flex items-start">
+                      <span className="mr-2">🔍</span>
+                      <span><strong>Busca propiedades similares</strong> en portales inmobiliarios</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">📝</span>
+                      <span><strong>Ingresa los datos</strong> de ubicación, tamaño y precio</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">🧮</span>
+                      <span><strong>Calculamos automáticamente</strong> el precio promedio por m²</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">🎯</span>
+                      <span><strong>Obtienes una referencia</strong> precisa para tu propiedad</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-bold text-green-800 mb-3">✅ Consejos profesionales</h4>
+                  <ul className="text-sm text-green-700 space-y-2">
+                    <li className="flex items-start">
+                      <span className="mr-2">🏠</span>
+                      <span><strong>Busca propiedades</strong> en el mismo sector o similares</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">📏</span>
+                      <span><strong>Prioriza tamaños</strong> y características parecidas</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">🔢</span>
+                      <span><strong>3-4 comparables</strong> son suficientes para una buena estimación</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">📊</span>
+                      <span><strong>Los resultados</strong> son una referencia, no una garantía</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

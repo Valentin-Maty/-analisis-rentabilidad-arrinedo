@@ -197,7 +197,7 @@ export default function PropitalSync({
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900">{property.address}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-600 mt-2">
-                      <div>💎 {property.value_uf ? `${property.value_uf} UF` : `$${property.value_clp.toLocaleString()}`}</div>
+                      <div>💎 {property.value_uf ? `${property.value_uf} UF` : `$${property.value_clp.toLocaleString('es-CL')}`}</div>
                       <div>📐 {property.size_m2}m²</div>
                       <div>🛏️ {property.bedrooms} dorm</div>
                       <div>🚿 {property.bathrooms} baños</div>

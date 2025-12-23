@@ -1,24 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback, memo } from 'react'
 
 interface AddressMapProps {
   address: string
 }
 
-export default function AddressMap({ address }: AddressMapProps) {
+function AddressMap({ address }: AddressMapProps) {
   const [mapUrl, setMapUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [coordinates, setCoordinates] = useState<{lat: number, lon: number} | null>(null)
   const [locationInfo, setLocationInfo] = useState<{displayName: string, accuracy: string} | null>(null)
   
-  useEffect(() => {
-    if (address && address.trim().length > 3) {
-      geocodeAddress(address)
-    }
-  }, [address])
-
-  const geocodeAddress = async (addressToGeocode: string) => {
+  const geocodeAddress = useCallback(async (addressToGeocode: string) => {
     setIsLoading(true)
     try {
       // Usar múltiples estrategias para mayor precisión
@@ -102,15 +96,6 @@ export default function AddressMap({ address }: AddressMapProps) {
           displayName: bestResult.display_name,
           accuracy: accuracyText
         })
-        
-        console.log('Ubicación encontrada:', {
-          address: bestResult.display_name,
-          accuracy: highestAccuracy,
-          accuracyText,
-          class: bestResult.class,
-          type: bestResult.type,
-          coordinates: { lat, lon }
-        })
       } else {
         // Si no encuentra la dirección, usar coordenadas por defecto de Santiago
         setCoordinates({ lat: -33.45, lon: -70.6 })
@@ -130,7 +115,13 @@ export default function AddressMap({ address }: AddressMapProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (address && address.trim().length > 3) {
+      geocodeAddress(address)
+    }
+  }, [address, geocodeAddress])
 
   if (!address) return null
 
@@ -207,3 +198,6 @@ export default function AddressMap({ address }: AddressMapProps) {
     </div>
   )
 }
+
+// Memoizar componente para evitar re-renders cuando la dirección no cambia
+export default memo(AddressMap)

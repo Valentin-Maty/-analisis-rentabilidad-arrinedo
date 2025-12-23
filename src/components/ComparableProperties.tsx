@@ -1,9 +1,10 @@
 'use client'
 
 import { UseFormReturn } from 'react-hook-form'
-import { useState } from 'react'
+import { useState, useMemo, useCallback, memo } from 'react'
 import type { RentalAnalysisForm } from '@/types/rental'
 import { formatNumber, unformatNumber } from '@/utils/numberFormatter'
+import { toast } from '@/components/ui/Toast'
 
 interface ComparablePropertiesProps {
   form: UseFormReturn<RentalAnalysisForm>
@@ -11,46 +12,48 @@ interface ComparablePropertiesProps {
   onCalculateSuggestedPrice?: () => void
 }
 
-export default function ComparableProperties({ form, formValues, onCalculateSuggestedPrice }: ComparablePropertiesProps) {
+function ComparableProperties({ form, formValues, onCalculateSuggestedPrice }: ComparablePropertiesProps) {
   const { register, setValue } = form
   const [activeComparables, setActiveComparables] = useState<number[]>([1])
 
-  const addComparable = (index: number) => {
-    if (!activeComparables.includes(index)) {
-      setActiveComparables([...activeComparables, index])
-    }
-  }
+  const addComparable = useCallback((index: number) => {
+    setActiveComparables(prev => {
+      if (!prev.includes(index)) {
+        return [...prev, index]
+      }
+      return prev
+    })
+  }, [])
 
-  const removeComparable = (index: number) => {
-    if (activeComparables.length > 1) {
-      setActiveComparables(activeComparables.filter(i => i !== index))
-      // Limpiar los campos del comparable eliminado
-      const fields = ['link', 'address', 'm2', 'bedrooms', 'bathrooms', 'parking', 'storage', 'price']
-      fields.forEach(field => {
-        setValue(`comparable_${index}_${field}` as keyof RentalAnalysisForm, '')
-      })
-    }
-  }
+  const removeComparable = useCallback((index: number) => {
+    setActiveComparables(prev => {
+      if (prev.length > 1) {
+        // Limpiar los campos del comparable eliminado
+        const fields = ['link', 'address', 'm2', 'bedrooms', 'bathrooms', 'parking', 'storage', 'price']
+        fields.forEach(field => {
+          setValue(`comparable_${index}_${field}` as keyof RentalAnalysisForm, '')
+        })
+        return prev.filter(i => i !== index)
+      }
+      return prev
+    })
+  }, [setValue])
 
-  const calculateSuggestedPrice = () => {
-    const validComparables = activeComparables.filter(index => {
+  // Memoizar propiedades de la propiedad principal
+  const propertyMetrics = useMemo(() => ({
+    m2: parseFloat(formValues.property_size_m2) || 0,
+    bedrooms: parseInt(formValues.bedrooms) || 1,
+    bathrooms: parseInt(formValues.bathrooms) || 1,
+    parking: parseInt(formValues.parking_spaces) || 0
+  }), [formValues.property_size_m2, formValues.bedrooms, formValues.bathrooms, formValues.parking_spaces])
+
+  // Memoizar datos válidos de comparables
+  const validComparablesData = useMemo(() => {
+    return activeComparables.filter(index => {
       const price = formValues[`comparable_${index}_price` as keyof RentalAnalysisForm]
       const m2 = formValues[`comparable_${index}_m2` as keyof RentalAnalysisForm]
       return price && m2 && parseFloat(price) > 0 && parseFloat(m2) > 0
-    })
-
-    if (validComparables.length === 0) {
-      alert('⚠️ Debe ingresar al menos una propiedad comparable válida (precio y m²)')
-      return
-    }
-
-    // Análisis de mercado avanzado
-    const propertyM2 = parseFloat(formValues.property_size_m2) || 0
-    const propertyBedrooms = parseInt(formValues.bedrooms) || 1
-    const propertyBathrooms = parseInt(formValues.bathrooms) || 1
-    const propertyParking = parseInt(formValues.parking_spaces) || 0
-
-    const comparableData = validComparables.map(index => {
+    }).map(index => {
       const price = parseFloat(formValues[`comparable_${index}_price` as keyof RentalAnalysisForm] || '0')
       const m2 = parseFloat(formValues[`comparable_${index}_m2` as keyof RentalAnalysisForm] || '0')
       const bedrooms = parseInt(formValues[`comparable_${index}_bedrooms` as keyof RentalAnalysisForm] || '1')
@@ -58,18 +61,18 @@ export default function ComparableProperties({ form, formValues, onCalculateSugg
       const parking = parseInt(formValues[`comparable_${index}_parking` as keyof RentalAnalysisForm] || '0')
       
       // Factor de similitud (0-1)
-      const bedroomsSimilarity = 1 - Math.abs(bedrooms - propertyBedrooms) * 0.15
-      const bathroomsSimilarity = 1 - Math.abs(bathrooms - propertyBathrooms) * 0.1
-      const parkingSimilarity = parking === propertyParking ? 1 : (Math.abs(parking - propertyParking) === 1 ? 0.85 : 0.7)
+      const bedroomsSimilarity = 1 - Math.abs(bedrooms - propertyMetrics.bedrooms) * 0.15
+      const bathroomsSimilarity = 1 - Math.abs(bathrooms - propertyMetrics.bathrooms) * 0.1
+      const parkingSimilarity = parking === propertyMetrics.parking ? 1 : (Math.abs(parking - propertyMetrics.parking) === 1 ? 0.85 : 0.7)
       
       const overallSimilarity = (bedroomsSimilarity + bathroomsSimilarity + parkingSimilarity) / 3
-      const adjustedPricePerM2 = (price / m2) * overallSimilarity
+      const pricePerM2 = price / m2
       
       return {
         price,
         m2,
-        pricePerM2: price / m2,
-        adjustedPricePerM2,
+        pricePerM2,
+        adjustedPricePerM2: pricePerM2 * overallSimilarity,
         similarity: overallSimilarity,
         bedrooms,
         bathrooms,
@@ -77,48 +80,42 @@ export default function ComparableProperties({ form, formValues, onCalculateSugg
         index
       }
     })
+  }, [activeComparables, formValues, propertyMetrics])
 
-    // Cálculos de mercado
-    const avgPricePerM2 = comparableData.reduce((sum, c) => sum + c.pricePerM2, 0) / comparableData.length
-    const weightedAvgPricePerM2 = comparableData.reduce((sum, c) => sum + c.adjustedPricePerM2, 0) / comparableData.length
-    const maxPricePerM2 = Math.max(...comparableData.map(c => c.pricePerM2))
-    const minPricePerM2 = Math.min(...comparableData.map(c => c.pricePerM2))
+  const calculateSuggestedPrice = useCallback(() => {
+    if (validComparablesData.length === 0) {
+      toast.warning('Datos incompletos', 'Debe ingresar al menos una propiedad comparable válida (precio y m²)')
+      return
+    }
+
+    // Cálculos de mercado usando datos memoizados
+    const avgPricePerM2 = validComparablesData.reduce((sum, c) => sum + c.pricePerM2, 0) / validComparablesData.length
+    const weightedAvgPricePerM2 = validComparablesData.reduce((sum, c) => sum + c.adjustedPricePerM2, 0) / validComparablesData.length
+    const maxPricePerM2 = Math.max(...validComparablesData.map(c => c.pricePerM2))
+    const minPricePerM2 = Math.min(...validComparablesData.map(c => c.pricePerM2))
 
     // Precio sugerido considerando similitud
-    const suggestedPrice = propertyM2 > 0 ? weightedAvgPricePerM2 * propertyM2 : weightedAvgPricePerM2 * 50
+    const suggestedPrice = propertyMetrics.m2 > 0 ? weightedAvgPricePerM2 * propertyMetrics.m2 : weightedAvgPricePerM2 * 50
     
     // Rango de precios
-    const minSuggested = minPricePerM2 * propertyM2
-    const maxSuggested = maxPricePerM2 * propertyM2
+    const minSuggested = minPricePerM2 * propertyMetrics.m2
+    const maxSuggested = maxPricePerM2 * propertyMetrics.m2
 
     setValue('suggested_rent_clp', Math.round(suggestedPrice).toString())
     
-    // Mostrar análisis detallado
-    const analysisText = `📊 ANÁLISIS DE MERCADO COMPLETO
-
-🎯 Precio Sugerido: $${Math.round(suggestedPrice).toLocaleString()} CLP
-📈 Rango de Mercado: $${Math.round(minSuggested).toLocaleString()} - $${Math.round(maxSuggested).toLocaleString()}
-📏 Precio promedio por m²: $${Math.round(avgPricePerM2).toLocaleString()}/m²
-🎯 Precio ajustado por similitud: $${Math.round(weightedAvgPricePerM2).toLocaleString()}/m²
-
-🏠 Comparables utilizados: ${validComparables.length}
-Comparables más similares:
-${comparableData
-  .sort((a, b) => b.similarity - a.similarity)
-  .slice(0, 2)
-  .map(c => `  • Comparable ${c.index}: ${(c.similarity * 100).toFixed(0)}% similar ($${Math.round(c.pricePerM2).toLocaleString()}/m²)`)
-  .join('\n')}
-
-✅ Precio calculado exitosamente con análisis de similitud`
-
-    alert(analysisText)
+    // Mostrar análisis detallado con toast
+    toast.success(
+      '📊 Análisis Completado',
+      `Precio sugerido: $${Math.round(suggestedPrice).toLocaleString('es-CL')} CLP basado en ${validComparablesData.length} comparables`,
+      8000
+    )
     
     if (onCalculateSuggestedPrice) {
       onCalculateSuggestedPrice()
     }
-  }
+  }, [validComparablesData, propertyMetrics, setValue, onCalculateSuggestedPrice])
 
-  const renderComparable = (index: number) => (
+  const renderComparable = useCallback((index: number) => (
     <div key={index} className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
       <div className="flex justify-between items-center mb-3">
         <h4 className="font-bold text-sm text-gray-700">
@@ -231,10 +228,10 @@ ${comparableData
                 <span className="font-semibold">💰 Precio/m²:</span> ${Math.round(
                   parseFloat(formValues[`comparable_${index}_price` as keyof RentalAnalysisForm] || '0') / 
                   parseFloat(formValues[`comparable_${index}_m2` as keyof RentalAnalysisForm] || '1')
-                ).toLocaleString()}
+                ).toLocaleString('es-CL')}
               </div>
               <div className="text-purple-700">
-                <span className="font-semibold">📈 Total mensual:</span> ${parseFloat(formValues[`comparable_${index}_price` as keyof RentalAnalysisForm] || '0').toLocaleString()}
+                <span className="font-semibold">📈 Total mensual:</span> ${parseFloat(formValues[`comparable_${index}_price` as keyof RentalAnalysisForm] || '0').toLocaleString('es-CL')}
               </div>
             </div>
             
@@ -248,7 +245,7 @@ ${comparableData
                       (parseFloat(formValues[`comparable_${index}_price` as keyof RentalAnalysisForm] || '0') / 
                        parseFloat(formValues[`comparable_${index}_m2` as keyof RentalAnalysisForm] || '1')) * 
                       parseFloat(formValues.property_size_m2)
-                    ).toLocaleString()}
+                    ).toLocaleString('es-CL')}
                   </span>
                 </div>
               </div>
@@ -257,7 +254,7 @@ ${comparableData
         )}
       </div>
     </div>
-  )
+  ), [activeComparables, removeComparable, register, formValues])
 
   return (
     <div className="space-y-4">
@@ -337,20 +334,20 @@ ${comparableData
                 <>
                   <div className="bg-white p-3 rounded border border-green-300">
                     <div className="text-green-700 font-semibold">🎯 Promedio Mercado</div>
-                    <div className="text-lg font-bold text-green-800">${Math.round(avgPrice).toLocaleString()}/m²</div>
+                    <div className="text-lg font-bold text-green-800">${Math.round(avgPrice).toLocaleString('es-CL')}/m²</div>
                     {propertyM2 > 0 && (
-                      <div className="text-xs text-green-600">Para {propertyM2}m²: ${Math.round(avgPrice * propertyM2).toLocaleString()}</div>
+                      <div className="text-xs text-green-600">Para {propertyM2}m²: ${Math.round(avgPrice * propertyM2).toLocaleString('es-CL')}</div>
                     )}
                   </div>
                   
                   <div className="bg-white p-3 rounded border border-blue-300">
                     <div className="text-blue-700 font-semibold">📈 Rango de Precios</div>
                     <div className="text-sm font-bold text-blue-800">
-                      ${Math.round(minPrice).toLocaleString()} - ${Math.round(maxPrice).toLocaleString()}/m²
+                      ${Math.round(minPrice).toLocaleString('es-CL')} - ${Math.round(maxPrice).toLocaleString('es-CL')}/m²
                     </div>
                     {propertyM2 > 0 && (
                       <div className="text-xs text-blue-600">
-                        ${Math.round(minPrice * propertyM2).toLocaleString()} - ${Math.round(maxPrice * propertyM2).toLocaleString()}
+                        ${Math.round(minPrice * propertyM2).toLocaleString('es-CL')} - ${Math.round(maxPrice * propertyM2).toLocaleString('es-CL')}
                       </div>
                     )}
                   </div>
@@ -359,7 +356,7 @@ ${comparableData
                     <div className="text-purple-700 font-semibold">🔍 Comparables</div>
                     <div className="text-lg font-bold text-purple-800">{validPrices.length} activos</div>
                     <div className="text-xs text-purple-600">
-                      Desviación: ±${Math.round((maxPrice - minPrice) / 2).toLocaleString()}/m²
+                      Desviación: ±${Math.round((maxPrice - minPrice) / 2).toLocaleString('es-CL')}/m²
                     </div>
                   </div>
                 </>
@@ -384,3 +381,6 @@ ${comparableData
     </div>
   )
 }
+
+// Memoizar el componente para evitar re-renders innecesarios cuando las props no cambian
+export default memo(ComparableProperties)

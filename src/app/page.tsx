@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import useRentalProfitability from '@/hooks/useRentalProfitability'
-import PropertyFormImprovedV2 from '@/components/PropertyFormImprovedV2'
+import PropertyFormImproved from '@/components/PropertyFormImproved'
 import AnalysisResultsImproved from '@/components/AnalysisResultsImproved'
-import RentalPlansImproved from '@/components/RentalPlansImproved'
 import AnalysisPreview from '@/components/AnalysisPreview'
 
 export default function HomePage() {
@@ -18,8 +17,6 @@ export default function HomePage() {
     marketStudy,
     capRateAnalysis,
     vacancyImpact,
-    rentalPlans,
-    planComparisons,
     generateAnalysis,
     suggestInitialRent,
   } = useRentalProfitability()
@@ -43,9 +40,15 @@ export default function HomePage() {
   const getStepTitle = () => {
     switch (currentStep) {
       case 1: return 'Paso 1: Información de la Propiedad y Análisis de Rentabilidad'
-      case 2: return 'Paso 2: Plan Comercial'
+      case 2: return 'Paso 2: Plan Comercial y Análisis Detallado'
       default: return ''
     }
+  }
+
+  const hasCapturePrice = () => {
+    const hasCaptureClp = formValues.capture_price_clp && parseFloat(formValues.capture_price_clp) > 0
+    const hasCaptureUf = formValues.capture_price_uf && parseFloat(formValues.capture_price_uf) > 0
+    return hasCaptureClp || hasCaptureUf
   }
 
   const isFormValid = () => {
@@ -68,7 +71,7 @@ export default function HomePage() {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Análisis de Rentabilidad para Arriendos
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -84,7 +87,7 @@ export default function HomePage() {
                   w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg
                   transition-all duration-300
                   ${step <= currentStep 
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' 
+                    ? 'bg-blue-700 text-white shadow-lg' 
                     : 'bg-gray-200 text-gray-500'
                   }
                 `}>
@@ -94,7 +97,7 @@ export default function HomePage() {
                   <div className={`
                     w-24 h-1 mx-4 rounded-full transition-all duration-300
                     ${step < currentStep 
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-600' 
+                      ? 'bg-blue-700' 
                       : 'bg-gray-200'
                     }
                   `} />
@@ -114,7 +117,7 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto">
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                <PropertyFormImprovedV2 
+                <PropertyFormImproved 
                   form={form}
                   formValues={formValues}
                   onSuggestRent={suggestInitialRent}
@@ -123,78 +126,73 @@ export default function HomePage() {
               
               <div className="lg:col-span-1">
                 <div className="sticky top-8">
-                  {/* Vista previa en tiempo real */}
-                  <div className="card">
-                    <div className="card-header">
-                      <h3 className="text-xl font-semibold text-white">Vista Previa</h3>
-                      <p className="text-blue-100 text-sm mt-1">Cálculos en tiempo real</p>
-                    </div>
-                    <div className="card-body space-y-6">
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="metric-card">
-                          <div className="metric-value">
-                            {calculations.cap_rate.toFixed(2)}%
-                          </div>
-                          <div className="metric-label">CAP Rate</div>
-                          <div className="tooltip">
-                            <span className="text-xs opacity-75 cursor-help">ℹ️ Información</span>
-                            <div className="tooltip-content">
-                              Rentabilidad anual neta sobre el valor de la propiedad
+                  {/* Vista previa solo cuando hay precio de captación */}
+                  {hasCapturePrice() ? (
+                    <div className="card">
+                      <div className="card-header">
+                        <h3 className="text-xl font-semibold text-white">Vista Previa</h3>
+                        <p className="text-blue-100 text-sm mt-1">Cálculos en tiempo real</p>
+                      </div>
+                      <div className="card-body space-y-6">
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="metric-card">
+                            <div className="metric-value">
+                              {calculations.cap_rate.toFixed(2)}%
+                            </div>
+                            <div className="metric-label">CAP Rate</div>
+                            <div className="tooltip">
+                              <span className="text-xs opacity-75 cursor-help">ℹ️ Información</span>
+                              <div className="tooltip-content">
+                                Rentabilidad anual neta sobre el valor de la propiedad
+                              </div>
                             </div>
                           </div>
+                          
+                          <div className="bg-white p-4 rounded-xl border-2 border-gray-100">
+                            <div className="text-2xl font-bold text-gray-800">
+                              ${calculations.monthly_net_income.toLocaleString('es-CL')}
+                            </div>
+                            <div className="text-sm text-gray-600">Ingreso Neto Mensual</div>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl border-2 border-gray-100">
+                            <div className="text-2xl font-bold text-orange-600">
+                              {calculations.break_even_rent_reduction.toFixed(1)}%
+                            </div>
+                            <div className="text-sm text-gray-600">Reducción Máxima Viable</div>
+                          </div>
+                          
+                          <div className="bg-white p-4 rounded-xl border-2 border-gray-100">
+                            <div className="text-2xl font-bold text-red-600">
+                              ${calculations.vacancy_cost_per_month.toLocaleString('es-CL')}
+                            </div>
+                            <div className="text-sm text-gray-600">Costo Vacancia/Mes</div>
+                          </div>
                         </div>
                         
-                        <div className="bg-white p-4 rounded-xl border-2 border-gray-100">
-                          <div className="text-2xl font-bold text-gray-800">
-                            ${calculations.monthly_net_income.toLocaleString()}
-                          </div>
-                          <div className="text-sm text-gray-600">Ingreso Neto Mensual</div>
+                        <div className="border-t pt-6">
+                          <button
+                            onClick={handleAnalyze}
+                            className="btn btn-primary w-full py-4 text-lg font-bold shadow-xl"
+                          >
+                            🚀 Generar Plan Comercial
+                          </button>
                         </div>
-                        
-                        <div className="bg-white p-4 rounded-xl border-2 border-gray-100">
-                          <div className="text-2xl font-bold text-orange-600">
-                            {calculations.break_even_rent_reduction.toFixed(1)}%
-                          </div>
-                          <div className="text-sm text-gray-600">Reducción Máxima Viable</div>
-                        </div>
-                        
-                        <div className="bg-white p-4 rounded-xl border-2 border-gray-100">
-                          <div className="text-2xl font-bold text-red-600">
-                            ${calculations.vacancy_cost_per_month.toLocaleString()}
-                          </div>
-                          <div className="text-sm text-gray-600">Costo Vacancia/Mes</div>
-                        </div>
-                      </div>
-                      
-                      <div className="border-t pt-6">
-                        <button
-                          onClick={() => {
-                            if (isFormValid()) {
-                              handleAnalyze()
-                            }
-                          }}
-                          disabled={!isFormValid()}
-                          className={`btn w-full py-4 text-lg font-bold ${
-                            isFormValid() 
-                              ? 'btn-primary shadow-xl' 
-                              : 'opacity-50 cursor-not-allowed'
-                          }`}
-                        >
-                          {isFormValid() ? '🚀 Generar Plan Comercial' : '⚠️ Completa los campos requeridos'}
-                        </button>
-                        
-                        {!isFormValid() && (
-                          <div className="mt-3 text-sm text-gray-600 space-y-1">
-                            <p className="font-medium">Campos requeridos:</p>
-                            <ul className="text-xs space-y-1 ml-4">
-                              {!formValues.suggested_rent_clp && !formValues.suggested_rent_uf && <li>• Precio sugerido de arriendo</li>}
-                              {!formValues.property_value_clp && !formValues.property_value_uf && <li>• Valor de la propiedad (CLP o UF)</li>}
-                            </ul>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="card">
+                      <div className="card-body text-center py-12">
+                        <div className="text-6xl mb-4">💰</div>
+                        <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                          Complete el Precio de Captación
+                        </h3>
+                        <p className="text-gray-600">
+                          Ingrese el precio de captación en la sección "Precio de Arriendo" para ver los cálculos de rentabilidad en tiempo real.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -206,10 +204,10 @@ export default function HomePage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">
-                  📊 Plan Comercial
+                  📊 Plan Comercial y Análisis Detallado
                 </h2>
                 <p className="text-gray-600 mt-2">
-                  {formValues.property_address || 'Vista previa del análisis y generación de propuesta'}
+                  {formValues.property_address || 'Análisis completo de rentabilidad'}
                 </p>
               </div>
               <div className="flex space-x-3">
@@ -223,21 +221,37 @@ export default function HomePage() {
                   onClick={handleStartOver}
                   className="btn btn-secondary"
                 >
-                  🔄 Nuevo Análisis
+                  🔄 Empezar Nuevo
                 </button>
               </div>
             </div>
 
-            {/* Aquí iría solo el componente del plan comercial */}
-            <div className="space-y-6">
-              {(formValues.suggested_rent_clp || formValues.suggested_rent_uf) ? (
-                <div>
-                  <h3 className="text-lg font-bold mb-4 text-gray-800">📄 Vista Previa del Análisis</h3>
-                  <AnalysisPreview formValues={formValues} />
-                </div>
+            {/* Plan Comercial y Análisis Detallado */}
+            <div className="space-y-8">
+              {(formValues.suggested_rent_clp || formValues.suggested_rent_uf) && analysisData ? (
+                <>
+                  {/* Vista Previa del Plan Comercial */}
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6">📄 Plan Comercial</h3>
+                    <AnalysisPreview formValues={formValues} />
+                  </div>
+
+                  {/* Análisis Detallado */}
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-6">📊 Análisis Detallado de Rentabilidad</h3>
+                    <AnalysisResultsImproved
+                      analysis={analysisData}
+                      calculations={calculations}
+                      capRateAnalysis={capRateAnalysis}
+                      vacancyImpact={vacancyImpact}
+                      rentCurrency={formValues.rent_currency}
+                      rentValueUF={formValues.suggested_rent_uf ? parseFloat(formValues.suggested_rent_uf) : undefined}
+                    />
+                  </div>
+                </>
               ) : (
                 <div className="text-center p-8 bg-gray-50 rounded-lg">
-                  <p className="text-gray-600">Complete el análisis de rentabilidad para ver la vista previa del plan comercial</p>
+                  <p className="text-gray-600">Complete el análisis de rentabilidad para ver el plan comercial y análisis detallado</p>
                   <button
                     onClick={handleBackToForm}
                     className="btn btn-primary mt-4"

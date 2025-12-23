@@ -55,7 +55,7 @@ export default function AnalysisResults({
               <p className="text-sm text-gray-600">Valor de la propiedad</p>
               <p className="font-medium">
                 {analysis.property.value_uf 
-                  ? `${analysis.property.value_uf.toLocaleString()} UF` 
+                  ? `${analysis.property.value_uf.toLocaleString('es-CL')} UF` 
                   : formatCurrency(analysis.property.value_clp)
                 }
               </p>
@@ -202,13 +202,13 @@ export default function AnalysisResults({
                 <div className="flex justify-between">
                   <span className="text-gray-600">Promedio de mercado:</span>
                   <span className="font-medium">
-                    ${analysis.market_study.average_rent_per_m2.toLocaleString()}/m²
+                    ${analysis.market_study.average_rent_per_m2.toLocaleString('es-CL')}/m²
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Precio de la propiedad:</span>
                   <span className="font-medium text-primary-600">
-                    ${Math.round(analysis.recommended_initial_rent / (analysis.property.size_m2 || 1)).toLocaleString()}/m²
+                    ${Math.round(analysis.recommended_initial_rent / (analysis.property.size_m2 || 1)).toLocaleString('es-CL')}/m²
                   </span>
                 </div>
               </div>

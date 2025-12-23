@@ -154,8 +154,20 @@ TuMatch Arriendos
           Planes Comerciales A, B y C
         </h3>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Selecciona los planes que deseas presentar al cliente. Cada plan tiene diferentes niveles de servicio y estrategias de precios.
+          Estos son 3 planes diferentes para arrendar su propiedad. Cada uno bajará el precio de forma distinta para arrendar más rápido.
         </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 max-w-3xl mx-auto">
+          <div className="flex items-start space-x-3">
+            <span className="text-blue-600 text-xl">💡</span>
+            <div className="text-sm text-blue-800">
+              <div className="font-medium mb-1">¿Cómo funcionan los planes?</div>
+              <div>• <strong>Plan A:</strong> Baja el precio rápido para arrendar en pocos días</div>
+              <div>• <strong>Plan B:</strong> Equilibrio entre precio y tiempo</div>
+              <div>• <strong>Plan C:</strong> Mantiene el precio alto más tiempo</div>
+              <div className="mt-2 text-blue-700 font-medium">✅ Usted elige cuál(es) presentar al dueño</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Contador y acciones */}
@@ -295,14 +307,14 @@ TuMatch Arriendos
                       <div className="font-bold text-green-800">
                         {formatCurrency(comparison.net_annual_income)}
                       </div>
-                      <div className="text-xs text-green-600">Ingreso Neto Anual</div>
+                      <div className="text-xs text-green-600">Dinero real que ganará en un año</div>
                     </div>
                     
                     <div className="text-center p-2 bg-blue-50 rounded-lg">
                       <div className="font-bold text-blue-800">
                         {comparison.vacancy_risk_score}/10
                       </div>
-                      <div className="text-xs text-blue-600">Riesgo Vacancia</div>
+                      <div className="text-xs text-blue-600">Qué tan difícil será encontrar arrendatario</div>
                     </div>
                   </div>
                 </div>
@@ -324,7 +336,7 @@ TuMatch Arriendos
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Plan</th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Precio Inicial</th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Comisión</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Ingreso Neto Anual</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Dinero Real del Año</th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Tiempo Esperado</th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Recomendación</th>
               </tr>
@@ -383,18 +395,18 @@ TuMatch Arriendos
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-2xl p-6">
         <h4 className="font-bold text-blue-900 mb-4 flex items-center">
           <span className="text-2xl mr-2">💡</span>
-          Información Importante para el Cliente
+          Información Importante que Debe Saber el Dueño
         </h4>
         <div className="grid lg:grid-cols-2 gap-4 text-sm text-blue-800">
           <div className="space-y-2">
-            <p>• El cliente debe aceptar al menos 1 plan comercial para publicar la propiedad</p>
-            <p>• Los ajustes de precio se realizan automáticamente según el cronograma establecido</p>
-            <p>• Si no se arrienda en 30 días, se evalúa pasar al plan básico o ajustar propuesta</p>
+            <p>• El dueño debe aceptar al menos 1 plan para empezar a publicar</p>
+            <p>• Los descuentos se hacen automáticamente en las fechas programadas</p>
+            <p>• Si no se arrienda en 30 días, revisamos y ajustamos la estrategia</p>
           </div>
           <div className="space-y-2">
-            <p>• Cada mes de vacancia representa una pérdida del 8.33% de la rentabilidad anual</p>
-            <p>• En caso de no aceptar ningún plan, se debe comunicar inmediatamente a gerencia</p>
-            <p>• El análisis y propuesta son válidos por 30 días desde su generación</p>
+            <p>• Cada mes vacía es dinero perdido que nunca se puede recuperar</p>
+            <p>• Si no acepta ningún plan, debe avisar inmediatamente a su jefe</p>
+            <p>• Esta propuesta tiene validez por sólo 30 días</p>
           </div>
         </div>
       </div>

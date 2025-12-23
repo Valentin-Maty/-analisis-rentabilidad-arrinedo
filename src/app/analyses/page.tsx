@@ -152,8 +152,8 @@ export default function AnalysesPage() {
               href="/analisis-precio" 
               className="btn btn-primary flex items-center space-x-2"
             >
-              <span>➕</span>
-              <span>Nuevo Análisis</span>
+              <span>🧮</span>
+              <span>Calculadora de Arriendo</span>
             </Link>
           </div>
         </div>
@@ -322,7 +322,7 @@ export default function AnalysesPage() {
                 }
               </p>
               <Link href="/analisis-precio" className="btn btn-primary">
-                ✨ Crear Primer Análisis
+                🧮 Calculadora de Arriendo
               </Link>
             </div>
           </div>

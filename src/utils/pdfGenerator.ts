@@ -112,9 +112,9 @@ export class RentalPDFGenerator {
     
     this.addKeyValue('Dirección', analysis.property.address)
     if (analysis.property.value_uf) {
-      this.addKeyValue('Valor UF', `${analysis.property.value_uf.toLocaleString()} UF`)
+      this.addKeyValue('Valor UF', `${analysis.property.value_uf.toLocaleString('es-CL')} UF`)
     }
-    this.addKeyValue('Valor CLP', `$${analysis.property.value_clp.toLocaleString()} CLP`)
+    this.addKeyValue('Valor CLP', `$${analysis.property.value_clp.toLocaleString('es-CL')} CLP`)
     
     if (analysis.property.size_m2) {
       this.addKeyValue('Superficie', `${analysis.property.size_m2} m²`)
@@ -155,7 +155,7 @@ export class RentalPDFGenerator {
   private addMarketStudy(analysis: RentalAnalysis): void {
     this.addTitle('ESTUDIO DE MERCADO', 14)
     
-    this.addKeyValue('Precio promedio por m²', `$${analysis.market_study.average_rent_per_m2.toLocaleString()}`)
+    this.addKeyValue('Precio promedio por m²', `$${analysis.market_study.average_rent_per_m2.toLocaleString('es-CL')}`
     this.addKeyValue('Rango mínimo de mercado', this.formatCurrency(analysis.market_study.market_range.min_rent_clp))
     this.addKeyValue('Rango máximo de mercado', this.formatCurrency(analysis.market_study.market_range.max_rent_clp))
     

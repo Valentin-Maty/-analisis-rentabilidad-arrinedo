@@ -81,7 +81,7 @@ export const generateSimpleRentalPDF = (options: SimplePDFOptions & { rentCurren
     addText(`📍 ${analysis.property.address}`, 12)
     addText(`💵 Valor: ${formatCurrency(analysis.property.value_clp)}`, 12)
     if (analysis.property.value_uf) {
-      addText(`💎 Valor: ${analysis.property.value_uf.toLocaleString()} UF`, 10)
+      addText(`💎 Valor: ${analysis.property.value_uf.toLocaleString('es-CL')} UF`, 10)
     }
     addText(`📐 Superficie: ${analysis.property.size_m2} m²`, 12)
     
