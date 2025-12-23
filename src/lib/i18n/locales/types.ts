@@ -48,6 +48,7 @@ export interface LocaleStrings {
   location: Record<string, string>
   signature: Record<string, string>
   propitalSync: Record<string, string>
+  accessibility: Record<string, string>
   plans: Record<string, string>
   errors: Record<string, string>
   messages: Record<string, string>
