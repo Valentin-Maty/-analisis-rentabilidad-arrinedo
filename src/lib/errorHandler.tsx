@@ -290,13 +290,25 @@ export function handleError(
 }
 
 export function handleApiError(
-  error: Error | string,
+  error: unknown,
   endpoint?: string,
   userMessage?: string
-): void {
-  handleError(error, ErrorType.API, ErrorSeverity.HIGH, userMessage, {
+): Response {
+  const errorInstance = error instanceof Error ? error : new Error(String(error))
+  
+  handleError(errorInstance, ErrorType.API, ErrorSeverity.HIGH, userMessage, {
     action: 'API_CALL',
     url: endpoint
+  })
+  
+  return new Response(JSON.stringify({
+    error: userMessage || 'Error interno del servidor',
+    details: process.env.NODE_ENV === 'development' ? errorInstance.message : undefined
+  }), {
+    status: 500,
+    headers: {
+      'Content-Type': 'application/json'
+    }
   })
 }
 
