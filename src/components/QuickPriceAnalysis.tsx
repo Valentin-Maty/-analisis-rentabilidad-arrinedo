@@ -1,6 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { AnalysisStorage } from '@/lib/localStorage'
+import { SavedAnalysis } from '@/types/saved-analysis'
+import { toast } from '@/components/ui/Toast'
 import { formatNumber, unformatNumber } from '@/utils/numberFormatter'
 
 interface ComparableProperty {
@@ -16,6 +20,7 @@ interface ComparableProperty {
 }
 
 export default function QuickPriceAnalysis() {
+  const router = useRouter()
   const [comparables, setComparables] = useState<ComparableProperty[]>([
     { id: 1, link: '', address: '', m2: '', bedrooms: '1', bathrooms: '1', parking: '0', storage: '0', price: '' }
   ])
@@ -23,6 +28,7 @@ export default function QuickPriceAnalysis() {
   const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null)
   const [initialPrice, setInitialPrice] = useState('')
   const [propertyM2, setPropertyM2] = useState('')
+  const [propertyAddress, setPropertyAddress] = useState('')
 
   const updateComparable = (id: number, field: keyof ComparableProperty, value: string) => {
     setComparables(prev => prev.map(comp => 
@@ -55,6 +61,94 @@ export default function QuickPriceAnalysis() {
     if (comparables.length > 1) {
       setComparables(prev => prev.filter(comp => comp.id !== id))
     }
+  }
+
+  // Función para guardar el análisis rápido
+  const handleSaveQuickAnalysis = () => {
+    if (!suggestedPrice || suggestedPrice <= 0) {
+      toast.error('Error', 'Primero debes calcular un precio sugerido')
+      return
+    }
+
+    const analysisData: SavedAnalysis = {
+      id: AnalysisStorage.generateId(),
+      title: propertyAddress || `Análisis Rápido - ${new Date().toLocaleDateString('es-CL')}`,
+      property: {
+        address: propertyAddress || 'Dirección no especificada',
+        value_clp: 0, // No calculamos valor en análisis rápido
+        size_m2: parseFloat(propertyM2) || 0,
+        bedrooms: 0, // Promedio de comparables
+        bathrooms: 0,
+        parking_spaces: 0,
+        storage_units: 0
+      },
+      analysis: {
+        suggested_rent_clp: Math.round(suggestedPrice),
+        rent_currency: 'CLP',
+        comparable_properties: comparables.filter(c => c.price && c.m2).map((c, idx) => ({
+          id: `comp_${idx}`,
+          address: c.address,
+          link: c.link,
+          rent_clp: parseFloat(c.price),
+          size_m2: parseFloat(c.m2),
+          similarity_score: 85, // Score aproximado
+          bedrooms: parseInt(c.bedrooms) || 0,
+          bathrooms: parseInt(c.bathrooms) || 0,
+          parking_spaces: parseInt(c.parking) || 0
+        })),
+        annual_expenses: {
+          maintenance_clp: 0,
+          property_tax_clp: 0,
+          insurance_clp: 0
+        },
+        uf_value_clp: 38000 // Valor UF aproximado
+      },
+      calculations: {
+        cap_rate: 0,
+        annual_rental_yield: 0,
+        monthly_net_income: Math.round(suggestedPrice * 0.9), // Aproximado
+        vacancy_cost_per_month: 0,
+        break_even_rent_reduction: 0,
+        plan_comparisons: []
+      },
+      metadata: {
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        broker_email: 'usuario@ejemplo.com',
+        status: 'draft',
+        tags: ['análisis-rápido', 'precio-sugerido'],
+        notes: `Precio calculado basado en ${comparables.filter(c => c.price && c.m2).length} comparables`
+      }
+    }
+
+    const success = AnalysisStorage.save(analysisData)
+    
+    if (success) {
+      toast.success('¡Éxito!', 'Análisis guardado correctamente')
+      setTimeout(() => {
+        router.push('/analyses')
+      }, 1500)
+    } else {
+      toast.error('Error', 'No se pudo guardar el análisis')
+    }
+  }
+
+  // Función para ir al análisis completo
+  const handleGoToFullAnalysis = () => {
+    // Guardar datos temporales en sessionStorage para prellenar el formulario
+    const tempData = {
+      suggestedPrice: Math.round(suggestedPrice || 0),
+      propertyAddress,
+      propertyM2,
+      comparables: comparables.filter(c => c.price && c.m2)
+    }
+    
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('quickAnalysisData', JSON.stringify(tempData))
+    }
+    
+    // Navegar a la página de análisis completo (PropertyFormImproved)
+    router.push('/new-analysis')
   }
 
   const addComparable = () => {
@@ -253,6 +347,15 @@ export default function QuickPriceAnalysis() {
               )}
 
               <div className="mt-4">
+                <label className="label">📍 Dirección de tu propiedad (opcional)</label>
+                <input
+                  value={propertyAddress}
+                  onChange={(e) => setPropertyAddress(e.target.value)}
+                  type="text"
+                  placeholder="Ej: Av. Providencia 1234, Las Condes"
+                  className="input mb-4"
+                />
+
                 <label className="label">📝 Precio Inicial (desde orden de captación)</label>
                 <input
                   value={formatNumber(initialPrice)}
@@ -319,6 +422,42 @@ export default function QuickPriceAnalysis() {
                   </ul>
                 </div>
               </div>
+
+              {/* Acciones disponibles después del cálculo */}
+              {suggestedPrice && suggestedPrice > 0 && (
+                <div className="mt-8 bg-white rounded-lg shadow-lg p-6 border-2 border-blue-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    🎯 ¿Qué deseas hacer ahora?
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Botón para guardar análisis rápido */}
+                    <button
+                      onClick={() => handleSaveQuickAnalysis()}
+                      className="btn btn-primary flex items-center justify-center space-x-2 py-4"
+                    >
+                      <span>💾</span>
+                      <span>Guardar este Análisis Rápido</span>
+                    </button>
+
+                    {/* Botón para ir al análisis completo */}
+                    <button
+                      onClick={() => handleGoToFullAnalysis()}
+                      className="btn btn-secondary flex items-center justify-center space-x-2 py-4"
+                    >
+                      <span>📊</span>
+                      <span>Crear Análisis Completo</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>💡 Tip:</strong> El análisis completo incluye planes comerciales,
+                      cálculo de rentabilidad, comparación de escenarios y generación de PDF profesional.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
