@@ -4,7 +4,7 @@ Responsibility: Motor de cálculos para análisis de rentabilidad
 Dependencies: Tipos de datos, cálculos financieros
 */
 
-import type { RentalAnalysisForm, RentalAnalysis, RentalPlan, PriceAdjustmentSchedule } from '@/types/rental'
+import type { RentalAnalysisForm, RentalAnalysis, RentalPlan, PriceAdjustment } from '@/types/rental'
 
 export function performAnalysis(formData: RentalAnalysisForm): RentalAnalysis {
   // Convertir valores de string a números
@@ -149,7 +149,7 @@ export function performAnalysis(formData: RentalAnalysisForm): RentalAnalysis {
 
 // Generar Plan A (Premium)
 function generatePlanA(baseRent: number): RentalPlan {
-  const schedule: PriceAdjustmentSchedule[] = [
+  const schedule: PriceAdjustment[] = [
     { day: 0, new_rent_clp: baseRent, percentage_reduction: 0 },
     { day: 15, new_rent_clp: baseRent * 0.95, percentage_reduction: 5 },
     { day: 25, new_rent_clp: baseRent * 0.92, percentage_reduction: 8 },
@@ -182,7 +182,7 @@ function generatePlanA(baseRent: number): RentalPlan {
 
 // Generar Plan B (Estándar)
 function generatePlanB(baseRent: number): RentalPlan {
-  const schedule: PriceAdjustmentSchedule[] = [
+  const schedule: PriceAdjustment[] = [
     { day: 0, new_rent_clp: baseRent, percentage_reduction: 0 },
     { day: 20, new_rent_clp: baseRent * 0.93, percentage_reduction: 7 },
     { day: 30, new_rent_clp: baseRent * 0.88, percentage_reduction: 12 }
@@ -213,7 +213,7 @@ function generatePlanB(baseRent: number): RentalPlan {
 
 // Generar Plan C (Básico)
 function generatePlanC(baseRent: number): RentalPlan {
-  const schedule: PriceAdjustmentSchedule[] = [
+  const schedule: PriceAdjustment[] = [
     { day: 0, new_rent_clp: baseRent, percentage_reduction: 0 },
     { day: 30, new_rent_clp: baseRent * 0.85, percentage_reduction: 15 }
   ]
