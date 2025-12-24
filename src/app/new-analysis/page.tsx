@@ -180,10 +180,39 @@ export default function NewAnalysisPage() {
             </div>
           </>
         ) : (
-          <AnalysisResults 
-            analysis={analysisResult}
-            onBack={() => setAnalysisResult(null)}
-          />
+          <div>
+            <div className="mb-6">
+              <button
+                onClick={() => setAnalysisResult(null)}
+                className="btn btn-secondary flex items-center space-x-2"
+              >
+                <span>←</span>
+                <span>Volver al Formulario</span>
+              </button>
+            </div>
+            <AnalysisResults 
+              analysis={analysisResult}
+              calculations={{
+                cap_rate: analysisResult.cap_rate_analysis.cap_rate_percentage,
+                annual_rental_yield: analysisResult.cap_rate_analysis.annual_rental_income > 0 && analysisResult.property.value_clp > 0
+                  ? (analysisResult.cap_rate_analysis.annual_rental_income / analysisResult.property.value_clp) * 100
+                  : 0,
+                monthly_net_income: analysisResult.cap_rate_analysis.net_operating_income / 12,
+                vacancy_cost_per_month: analysisResult.vacancy_impact.lost_income_clp / 12,
+                break_even_rent_reduction: analysisResult.vacancy_impact.break_even_reduction_percentage,
+                plan_comparisons: analysisResult.plans.map(plan => ({
+                  plan_id: plan.id,
+                  initial_rent: plan.initial_rent_clp,
+                  final_rent: plan.final_rent_clp || plan.initial_rent_clp,
+                  commission: plan.commission_percentage,
+                  expected_days: plan.expected_rental_time_days || 30,
+                  total_commission: (plan.final_rent_clp || plan.initial_rent_clp) * (plan.commission_percentage / 100)
+                }))
+              }}
+              capRateAnalysis={analysisResult.cap_rate_analysis}
+              vacancyImpact={analysisResult.vacancy_impact}
+            />
+          </div>
         )}
       </div>
     </div>
