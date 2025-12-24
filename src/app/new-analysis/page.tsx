@@ -202,11 +202,11 @@ export default function NewAnalysisPage() {
                 break_even_rent_reduction: analysisResult.vacancy_impact.break_even_reduction_percentage,
                 plan_comparisons: analysisResult.plans.map(plan => ({
                   plan_id: plan.id,
-                  initial_rent: plan.initial_rent_clp,
-                  final_rent: plan.final_rent_clp || plan.initial_rent_clp,
-                  commission: plan.commission_percentage,
-                  expected_days: plan.expected_rental_time_days || 30,
-                  total_commission: (plan.final_rent_clp || plan.initial_rent_clp) * (plan.commission_percentage / 100)
+                  expected_rental_time: plan.expected_rental_time_days || 30,
+                  total_commission: (plan.final_rent_clp || plan.initial_rent_clp) * (plan.commission_percentage / 100),
+                  net_annual_income: (plan.final_rent_clp || plan.initial_rent_clp) * 12 * 0.9, // Aproximado con 10% gastos
+                  vacancy_risk_score: plan.id === 'A' ? 2 : plan.id === 'B' ? 4 : 6, // A=menor riesgo, C=mayor riesgo
+                  recommendation_score: plan.success_probability_percentage ? plan.success_probability_percentage / 10 : 8 // Convertir % a escala 1-10
                 }))
               }}
               capRateAnalysis={analysisResult.cap_rate_analysis}
