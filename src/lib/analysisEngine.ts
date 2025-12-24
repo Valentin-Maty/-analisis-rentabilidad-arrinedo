@@ -161,22 +161,10 @@ function generatePlanA(baseRent: number): RentalPlan {
     name: 'Plan Premium',
     description: 'Servicio completo con marketing intensivo y ajustes flexibles para arriendo rápido',
     initial_rent_clp: baseRent,
-    final_rent_clp: baseRent * 0.90,
     commission_percentage: 50,
     service_level: 'premium',
     marketing_duration_days: 30,
-    price_adjustment_schedule: schedule,
-    expected_rental_time_days: 15,
-    success_probability_percentage: 95,
-    included_services: [
-      'Fotografía profesional HDR',
-      'Video tour 360°',
-      'Publicación en 10+ portales',
-      'Gestión completa de visitas',
-      'Verificación exhaustiva de arrendatarios',
-      'Redacción de contrato',
-      'Soporte post-arriendo 3 meses'
-    ]
+    price_adjustment_schedule: schedule
   }
 }
 
@@ -193,21 +181,10 @@ function generatePlanB(baseRent: number): RentalPlan {
     name: 'Plan Estándar',
     description: 'Balance óptimo entre precio y servicio con ajustes moderados',
     initial_rent_clp: baseRent,
-    final_rent_clp: baseRent * 0.88,
     commission_percentage: 75,
     service_level: 'standard',
     marketing_duration_days: 30,
-    price_adjustment_schedule: schedule,
-    expected_rental_time_days: 20,
-    success_probability_percentage: 85,
-    included_services: [
-      'Fotografía profesional',
-      'Publicación en 5+ portales',
-      'Gestión de visitas coordinadas',
-      'Verificación básica de arrendatarios',
-      'Redacción de contrato',
-      'Soporte post-arriendo 1 mes'
-    ]
+    price_adjustment_schedule: schedule
   }
 }
 
@@ -223,19 +200,10 @@ function generatePlanC(baseRent: number): RentalPlan {
     name: 'Plan Básico',
     description: 'Servicio económico con ajuste único al final del período',
     initial_rent_clp: baseRent,
-    final_rent_clp: baseRent * 0.85,
     commission_percentage: 100,
     service_level: 'basic',
     marketing_duration_days: 30,
-    price_adjustment_schedule: schedule,
-    expected_rental_time_days: 30,
-    success_probability_percentage: 75,
-    included_services: [
-      'Fotografía básica',
-      'Publicación en 3 portales principales',
-      'Coordinación básica de visitas',
-      'Plantilla de contrato estándar'
-    ]
+    price_adjustment_schedule: schedule
   }
 }
 
