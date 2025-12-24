@@ -200,14 +200,21 @@ export default function NewAnalysisPage() {
                 monthly_net_income: analysisResult.cap_rate_analysis.net_operating_income / 12,
                 vacancy_cost_per_month: analysisResult.vacancy_impact.lost_income_clp / 12,
                 break_even_rent_reduction: analysisResult.vacancy_impact.break_even_reduction_percentage,
-                plan_comparisons: analysisResult.plans.map(plan => ({
-                  plan_id: plan.id,
-                  expected_rental_time: plan.expected_rental_time_days || 30,
-                  total_commission: (plan.final_rent_clp || plan.initial_rent_clp) * (plan.commission_percentage / 100),
-                  net_annual_income: (plan.final_rent_clp || plan.initial_rent_clp) * 12 * 0.9, // Aproximado con 10% gastos
-                  vacancy_risk_score: plan.id === 'A' ? 2 : plan.id === 'B' ? 4 : 6, // A=menor riesgo, C=mayor riesgo
-                  recommendation_score: plan.success_probability_percentage ? plan.success_probability_percentage / 10 : 8 // Convertir % a escala 1-10
-                }))
+                plan_comparisons: analysisResult.plans.map(plan => {
+                  // Calcular renta final del último ajuste o usar inicial
+                  const finalRent = plan.price_adjustment_schedule && plan.price_adjustment_schedule.length > 0
+                    ? plan.price_adjustment_schedule[plan.price_adjustment_schedule.length - 1].new_rent_clp
+                    : plan.initial_rent_clp
+                  
+                  return {
+                    plan_id: plan.id,
+                    expected_rental_time: plan.marketing_duration_days || 30,
+                    total_commission: finalRent * (plan.commission_percentage / 100),
+                    net_annual_income: finalRent * 12 * 0.9, // Aproximado con 10% gastos
+                    vacancy_risk_score: plan.id === 'A' ? 2 : plan.id === 'B' ? 4 : 6, // A=menor riesgo, C=mayor riesgo
+                    recommendation_score: plan.id === 'A' ? 9 : plan.id === 'B' ? 7 : 5 // A=mejor recomendación
+                  }
+                })
               }}
               capRateAnalysis={analysisResult.cap_rate_analysis}
               vacancyImpact={analysisResult.vacancy_impact}
